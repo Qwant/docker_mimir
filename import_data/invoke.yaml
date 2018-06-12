@@ -1,0 +1,41 @@
+## MANDATORY path to the OpenStreetMap pbf file
+#osm_file:
+
+## MANDATORY url to elasticsearch
+# es:
+
+## Name of the dataset
+dataset: default
+
+# admin:
+#   ## If present will use the admins from cosmogony
+#   cosmogony:
+#     ## This can be use with 2 use cases:
+#     ## use 'file' to give the path to an already generated cosmogony file
+#     file:
+#     ## or use the variables below to generate a cosmogony file on the fly
+#     directory:
+#     output_dir:
+#   ## If present will use the admins from osm
+#   osm:
+#     levels:
+#       - 8
+
+
+
+# # If present, this will control the import of the Point Of Interest
+# poi:
+#   ## If present will use fafnir to import the poi
+#   fafnir:
+#     ## connection string to postgresql (format: postgres://{user}:{pwd}@{host}:{post})
+#     pg:
+#   ## If present will use osm2mimir to import the poi
+#   osm:
+
+# addresses:
+#   # PATH to the openaddresses file
+#   oa_file:
+
+#   # PATH to the bano file
+#   bano_file:
+
