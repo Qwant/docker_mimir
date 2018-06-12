@@ -5,9 +5,13 @@ import logging
 
 logging.basicConfig(level=logging.INFO)
 
-def run_rust_binary(ctx, bin, params):
-    ctx.run('{bin} {params}'.format(**locals()))
-    logging.info('running: {bin} {params}'.format(**locals()))
+def run_rust_binary(ctx, container, bin, params):
+    cmd = '{} {}'.format(bin, format)
+    if ctx.get('run_on_docker_compose'):
+        cmd = 'docker-compose run {container} {cmd}'.format(container=container, cmd=cmd)
+
+    logging.info('running: {}'.format(cmd))
+    ctx.run(cmd)
 
 
 @task()
@@ -16,7 +20,7 @@ def generate_cosmogony(ctx):
     with ctx.cd(ctx.admin.cosmogony.directory):
         ctx.run('mkdir -p {ctx.admin.cosmogony.output_dir}'.format(ctx=ctx))
         cosmogony_file = '{ctx.admin.cosmogony.output_dir}/cosmogony.json'.format(ctx=ctx)
-        run_rust_binary(ctx, 'cosmogony', 
+        run_rust_binary(ctx, 'cosmogony', 'cosmogony', 
         '--input {ctx.osm_file} \
         --output {cosmogony_file}'.format(ctx=ctx, cosmogony_file=cosmogony_file))
         ctx.admin.cosmogony.file = cosmogony_file
@@ -25,7 +29,7 @@ def generate_cosmogony(ctx):
 @task()
 def load_cosmogony(ctx):
     logging.info("loading cosmogony")
-    run_rust_binary(ctx, 'cosmogony2mimir', 
+    run_rust_binary(ctx, 'mimir', 'cosmogony2mimir', 
         '--input {ctx.admin.cosmogony.file} \
         --connection-string {ctx.es} \
         --dataset {ctx.dataset}'.format(ctx=ctx))
@@ -42,7 +46,7 @@ def load_osm(ctx):
             for lvl in osm_args['levels']:
                 admin_args += ' --level {}'.format(lvl)
 
-    run_rust_binary(ctx, 'osm2mimir', 
+    run_rust_binary(ctx, 'mimir', 'osm2mimir', 
         '--input {ctx.osm_file} \
         --connection-string {ctx.es} \
         --dataset {ctx.dataset}\
@@ -59,14 +63,14 @@ def load_addresses(ctx):
 
     if 'bano_file' in addr_config:
         logging.info("importing bano addresses")
-        run_rust_binary(ctx, 'bano2mimir', 
+        run_rust_binary(ctx, 'mimir', 'bano2mimir', 
             '--input {ctx.addresses.bano_file} \
             --connection-string {ctx.es} \
             --dataset {ctx.dataset}'.format(ctx=ctx))
     if 'oa_file' in addr_config:
         logging.info("importing oa addresses")
         # TODO take multiples oa files ?
-        run_rust_binary(ctx, 'openaddresses2mimir', 
+        run_rust_binary(ctx, 'mimir', 'openaddresses2mimir', 
             '--input {ctx.addresses.oa_file} \
             --connection-string {ctx.es} \
             --dataset {ctx.dataset}'.format(ctx=ctx))
@@ -86,14 +90,14 @@ def load_pois(ctx):
             logging.warn("for the moment we can't load data in postgres for fafnir")
 
         logging.info("importing poi with fafnir")
-        run_rust_binary(ctx, 'fafnir', 
+        run_rust_binary(ctx, 'fafnir, 'fafnir', 
             '--es {ctx.es} \
             --pg {fafnir_conf.pg}'.format(ctx=ctx, fafnir_conf=fafnir_conf))
             
     if 'osm' in poi_conf:
         logging.info("importing poi from osm")
         # TODO take a custom poi_config
-        run_rust_binary(ctx, 'osm2mimir', 
+        run_rust_binary(ctx, 'mimir', 'osm2mimir', 
             '--input {ctx.osm_file} \
             --connection-string {ctx.es} \
             --dataset {ctx.dataset}\
