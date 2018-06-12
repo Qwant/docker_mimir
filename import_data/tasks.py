@@ -6,8 +6,8 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 def run_rust_binary(ctx, bin, params):
-    logging.debug('running: {bin} {params}'.format(**locals()))
     ctx.run('{bin} {params}'.format(**locals()))
+    logging.info('running: {bin} {params}'.format(**locals()))
 
 
 @task()
@@ -34,14 +34,20 @@ def load_cosmogony(ctx):
 @task()
 def load_osm(ctx):
     logging.info("importing data from osm")
-    import_admin = '' if _use_cosmogony(ctx) else '--import-admin'
+    admin_args = ''
+    if not _use_cosmogony(ctx):
+        osm_args = ctx.admin.get('osm')
+        if _is_config_object(osm_args):
+            admin_args = '--import-admin'
+            for lvl in osm_args['levels']:
+                admin_args += ' --level {}'.format(lvl)
 
     run_rust_binary(ctx, 'osm2mimir', 
         '--input {ctx.osm_file} \
         --connection-string {ctx.es} \
         --dataset {ctx.dataset}\
         --import-way \
-        {import_admin}'.format(ctx=ctx, import_admin=import_admin))
+        {import_admin}'.format(ctx=ctx, import_admin=admin_args))
 
 
 @task()
@@ -100,7 +106,7 @@ def _use_cosmogony(ctx):
 
 
 def _is_config_object(obj):
-    return obj is not None and (isinstance(obj, DataProxy) or isinstance(obj, dict))
+    return obj is not None and isinstance(obj, (DataProxy, dict))
 
 
 @task(default=True)

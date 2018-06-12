@@ -16,8 +16,12 @@ dataset: default
 #     ## or use the variables below to generate a cosmogony file on the fly
 #     directory:
 #     output_dir:
-#   ## If present will use the admins from cosmogony
-#   osm: {}
+#   ## If present will use the admins from osm
+#   osm:
+#     levels:
+#       - 8
+
+
 
 # # If present, this will control the import of the Point Of Interest
 # poi:
