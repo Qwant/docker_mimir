@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+  mimir:
+    image: mimir
+
+    volumes:
+      - ${OSM_DIR}:/data/osm
+      - ${ADDR_DIR}:/data/addresses
+      - ${COSMOGONY_DIR}:/data/cosmogony
+
+  es:
+    image: elasticsearch:2
+    ports:
+      - 9200
+
+  bragi:
+    image: 'mimir_bragi'
+    environment:
+      - BRAGI_ES=http://es:9200
+    ports:
+     - 4000

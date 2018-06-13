@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  geocoder-tester:
+    image: geocoder-tester
+
+    volumes:
+    - ./results:/results
+
+  pinger:
+    image: byrnedo/alpine-curl

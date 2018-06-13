@@ -12,6 +12,7 @@ name = "pypi"
 [packages]
 
 invoke = "*"
+retrying = "*"
 
 
 [requires]

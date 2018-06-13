@@ -2,11 +2,12 @@
 from invoke import task
 from invoke.config import DataProxy
 import logging
+from retrying import retry
 
 logging.basicConfig(level=logging.INFO)
 
 def run_rust_binary(ctx, container, bin, params):
-    cmd = '{} {}'.format(bin, format)
+    cmd = '{} {}'.format(bin, params)
     if ctx.get('run_on_docker_compose'):
         cmd = 'docker-compose run {container} {cmd}'.format(container=container, cmd=cmd)
 
@@ -90,7 +91,7 @@ def load_pois(ctx):
             logging.warn("for the moment we can't load data in postgres for fafnir")
 
         logging.info("importing poi with fafnir")
-        run_rust_binary(ctx, 'fafnir, 'fafnir', 
+        run_rust_binary(ctx, 'fafnir', 'fafnir',
             '--es {ctx.es} \
             --pg {fafnir_conf.pg}'.format(ctx=ctx, fafnir_conf=fafnir_conf))
             
@@ -130,3 +131,65 @@ def load_all(ctx):
     load_addresses(ctx)
 
     load_pois(ctx)
+
+@task(iterable=['files'])
+def compose_up(ctx, files=[]):
+    """
+    pop all the necessary dockers for mimir
+
+    you can specify additional docker-compose file to the command with the --files parameters
+    """
+    logging.info('running in docker-compose mode')
+    ctx.run_on_docker_compose = True
+    files_args = _build_docker_files_args(files)
+
+    ctx.run('docker-compose {files} up -d'.format(files=files_args))
+
+    _wait_for_es(ctx, files)
+
+
+@task(iterable=['files'])
+def compose_down(ctx, files=[]):
+    files_args = _build_docker_files_args(files)
+
+    ctx.run('docker-compose {files} stop'.format(files=files_args))
+
+
+@task(iterable=['files'])
+def test(ctx, files=None):
+    """
+    Run some tests on mimir with geocoder tester.
+
+    The docker-compose must have been set up before running this command
+
+    you can specify additional docker-compose file to the command with the --files parameters
+
+    The tests results are written in the ./result directory (defined in tester_docker-compose.yml)
+    """
+    if not ctx.run_on_docker_compose:
+        raise Exception("geocoder-tester can run only in docker-compose mode")
+    logging.info('running geocoder-tester')
+
+    files_args = _build_docker_files_args(['tester_docker-compose.yml'] + files)
+
+    ctx.run('docker-compose {files} run --rm geocoder-tester'.format(files=files_args))
+
+
+@retry(stop_max_delay=20000, wait_fixed=10)
+def _wait_for_es(ctx, files):
+    logging.info('waiting for es')
+    logging.info('waiting for es {}'.format(ctx.es))
+    files_args = _build_docker_files_args(['tester_docker-compose.yml'] + files)
+    ctx.run('docker-compose {files_args} run --rm pinger {url}'.format(files_args=files_args, url=ctx.es))
+
+
+@task(iterable=['files'])
+def load_in_docker_and_test(ctx, files=[]):
+    compose_up(ctx, files)
+    load_all(ctx)
+    test(ctx, files)
+    compose_down(ctx, files)
+
+def _build_docker_files_args(files):
+    compose_files = ['docker-compose.yml'] + files
+    return ''.join([' -f {}'.format(f) for f in compose_files])
