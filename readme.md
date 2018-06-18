@@ -31,7 +31,7 @@ This will:
 
 * run a docker-compose up
 * import some data in mimir
-* run geocoder in it and write results in a local directory
+* run geocoder-tester in it and write results in a local directory
 
 To configure some stuff, some enviroment can be set in a `.env` file in the directory.
 
@@ -43,7 +43,7 @@ ADDR_DIR=<path to addresses data dir>
 COSMOGONY_DIR=<path to cosmogony data dir>
 ```
 
-Some other docker-compose files can also be given (this will use [the docker compose override mechanism](https://docs.docker.com/compose/extends/#different-environments)).
+Some other docker-compose files can also be given (this will use [the docker compose override mechanism](https://docs.docker.com/compose/extends/#different-environments)). It will for example makes it possible to use customly build image to run tests on a given mimir (or fafnir, cosmogony, ...) branch.
 
 The file pathes are given with the `--files` arguments.
 

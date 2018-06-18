@@ -1,7 +1,6 @@
 # example file to run mimir in docker, the file path must be changed
 osm_file: /data/osm/luxembourg-latest.osm.pbf
 es: http://es:9200
-run_on_docker_compose: True
 
 admin:
   cosmogony:

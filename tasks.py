@@ -175,7 +175,7 @@ def test(ctx, files=None):
     ctx.run('docker-compose {files} run --rm geocoder-tester'.format(files=files_args))
 
 
-@retry(stop_max_delay=20000, wait_fixed=10)
+@retry(stop_max_delay=20000, wait_fixed=100)
 def _wait_for_es(ctx, files):
     logging.info('waiting for es')
     logging.info('waiting for es {}'.format(ctx.es))
