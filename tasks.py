@@ -6,22 +6,24 @@ from retrying import retry
 
 logging.basicConfig(level=logging.INFO)
 
-def run_rust_binary(ctx, container, bin, params):
+
+def run_rust_binary(ctx, container, bin, files, params):
     cmd = '{} {}'.format(bin, params)
     if ctx.get('run_on_docker_compose'):
-        cmd = 'docker-compose run {container} {cmd}'.format(container=container, cmd=cmd)
+        files_args = _build_docker_files_args(files)
+        cmd = 'docker-compose {files} run {container} {cmd}'.format(files=files_args, container=container, cmd=cmd)
 
     logging.info('running: {}'.format(cmd))
     ctx.run(cmd)
 
 
 @task()
-def generate_cosmogony(ctx):
+def generate_cosmogony(ctx, files=[]):
     logging.info("generating cosmogony file")
     with ctx.cd(ctx.admin.cosmogony.directory):
         ctx.run('mkdir -p {ctx.admin.cosmogony.output_dir}'.format(ctx=ctx))
         cosmogony_file = '{ctx.admin.cosmogony.output_dir}/cosmogony.json'.format(ctx=ctx)
-        run_rust_binary(ctx, 'cosmogony', 'cosmogony', 
+        run_rust_binary(ctx, 'cosmogony', 'cosmogony', files,
         '--input {ctx.osm_file} \
         --output {cosmogony_file}'.format(ctx=ctx, cosmogony_file=cosmogony_file))
         ctx.admin.cosmogony.file = cosmogony_file
@@ -30,14 +32,14 @@ def generate_cosmogony(ctx):
 @task()
 def load_cosmogony(ctx):
     logging.info("loading cosmogony")
-    run_rust_binary(ctx, 'mimir', 'cosmogony2mimir', 
+    run_rust_binary(ctx, 'mimir', 'cosmogony2mimir', files,
         '--input {ctx.admin.cosmogony.file} \
         --connection-string {ctx.es} \
         --dataset {ctx.dataset}'.format(ctx=ctx))
 
 
 @task()
-def load_osm(ctx):
+def load_osm(ctx, files=[]):
     logging.info("importing data from osm")
     admin_args = ''
     if not _use_cosmogony(ctx):
@@ -47,7 +49,7 @@ def load_osm(ctx):
             for lvl in osm_args['levels']:
                 admin_args += ' --level {}'.format(lvl)
 
-    run_rust_binary(ctx, 'mimir', 'osm2mimir', 
+    run_rust_binary(ctx, 'mimir', 'osm2mimir', files,
         '--input {ctx.osm_file} \
         --connection-string {ctx.es} \
         --dataset {ctx.dataset}\
@@ -56,7 +58,7 @@ def load_osm(ctx):
 
 
 @task()
-def load_addresses(ctx):
+def load_addresses(ctx, files=[]):
     addr_config = ctx.get('addresses')
     if not _is_config_object(addr_config):
         logging.info("no addresses to import")
@@ -64,21 +66,21 @@ def load_addresses(ctx):
 
     if 'bano_file' in addr_config:
         logging.info("importing bano addresses")
-        run_rust_binary(ctx, 'mimir', 'bano2mimir', 
+        run_rust_binary(ctx, 'mimir', 'bano2mimir', files,
             '--input {ctx.addresses.bano_file} \
             --connection-string {ctx.es} \
             --dataset {ctx.dataset}'.format(ctx=ctx))
     if 'oa_file' in addr_config:
         logging.info("importing oa addresses")
         # TODO take multiples oa files ?
-        run_rust_binary(ctx, 'mimir', 'openaddresses2mimir', 
+        run_rust_binary(ctx, 'mimir', 'openaddresses2mimir', files,
             '--input {ctx.addresses.oa_file} \
             --connection-string {ctx.es} \
             --dataset {ctx.dataset}'.format(ctx=ctx))
 
 
 @task()
-def load_pois(ctx):
+def load_pois(ctx, files=[]):
     poi_conf = ctx.get('poi')
     if not _is_config_object(poi_conf):
         logging.info("no poi to import")
@@ -91,14 +93,14 @@ def load_pois(ctx):
             logging.warn("for the moment we can't load data in postgres for fafnir")
 
         logging.info("importing poi with fafnir")
-        run_rust_binary(ctx, 'fafnir', 'fafnir',
+        run_rust_binary(ctx, 'fafnir', 'fafnir', files,
             '--es {ctx.es} \
             --pg {fafnir_conf.pg}'.format(ctx=ctx, fafnir_conf=fafnir_conf))
             
     if 'osm' in poi_conf:
         logging.info("importing poi from osm")
         # TODO take a custom poi_config
-        run_rust_binary(ctx, 'mimir', 'osm2mimir', 
+        run_rust_binary(ctx, 'mimir', 'osm2mimir', files,
             '--input {ctx.osm_file} \
             --connection-string {ctx.es} \
             --dataset {ctx.dataset}\
@@ -115,7 +117,7 @@ def _is_config_object(obj):
 
 
 @task(default=True)
-def load_all(ctx):
+def load_all(ctx, files=[]):
     """
     default task called if `invoke` is run without args
     This is the main tasks that import all the datas into mimir

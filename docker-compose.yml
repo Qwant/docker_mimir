@@ -8,6 +8,8 @@ services:
       - ${OSM_DIR}:/data/osm
       - ${ADDR_DIR}:/data/addresses
       - ${COSMOGONY_DIR}:/data/cosmogony
+    environment:
+      - RUST_LOG=info,hyper=warn,rs_es=warn
 
   es:
     image: elasticsearch:2
