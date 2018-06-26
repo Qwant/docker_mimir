@@ -11,7 +11,7 @@ def run_rust_binary(ctx, container, bin, files, params):
     cmd = '{} {}'.format(bin, params)
     if ctx.get('run_on_docker_compose'):
         files_args = _build_docker_files_args(files)
-        cmd = 'docker-compose {files} run {container} {cmd}'.format(files=files_args, container=container, cmd=cmd)
+        cmd = 'docker-compose {files} run --rm {container} {cmd}'.format(files=files_args, container=container, cmd=cmd)
 
     logging.info('running: {}'.format(cmd))
     ctx.run(cmd)
@@ -30,7 +30,7 @@ def generate_cosmogony(ctx, files=[]):
 
 
 @task()
-def load_cosmogony(ctx):
+def load_cosmogony(ctx, files=[]):
     logging.info("loading cosmogony")
     run_rust_binary(ctx, 'mimir', 'cosmogony2mimir', files,
         '--input {ctx.admin.cosmogony.file} \
