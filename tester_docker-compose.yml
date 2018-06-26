@@ -2,7 +2,7 @@ version: '3'
 
 services:
   geocoder-tester:
-    image: geocoder-tester
+    image: qwantresearch/geocoder-tester
 
     volumes:
     - ./results:/results

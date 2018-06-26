@@ -2,7 +2,7 @@ version: '3'
 
 services:
   mimir:
-    image: mimirsbrunn
+    image: navitia/mimirsbrunn
 
     volumes:
       - ${OSM_DIR}:/data/osm
@@ -17,7 +17,7 @@ services:
       - 9200
 
   bragi:
-    image: 'bragi'
+    image: navitia/bragi
     environment:
       - BRAGI_ES=http://es:9200
     ports:
