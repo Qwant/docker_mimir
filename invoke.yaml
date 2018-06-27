@@ -14,8 +14,10 @@ dataset: default
 #     ## use 'file' to give the path to an already generated cosmogony file
 #     file:
 #     ## or use the variables below to generate a cosmogony file on the fly
-#     directory:
+#     ## output directory where to write the cosmogony.json
 #     output_dir:
+#     ## optional parameter (only if run without docker) cosmogony source directory (to find libpostal)
+#     directory:
 #   ## If present will use the admins from osm
 #   osm:
 #     levels:

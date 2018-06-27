@@ -22,3 +22,10 @@ services:
       - BRAGI_ES=http://es:9200
     ports:
      - 4000
+
+  cosmogony:
+    image: osmwithoutborders/cosmogony
+
+    volumes:
+      - ${OSM_DIR}:/data/osm
+      - ${COSMOGONY_DIR}:/data/cosmogony

@@ -20,10 +20,17 @@ def run_rust_binary(ctx, container, bin, files, params):
 @task()
 def generate_cosmogony(ctx, files=[]):
     logging.info("generating cosmogony file")
-    with ctx.cd(ctx.admin.cosmogony.directory):
+    if not ctx.get('run_on_docker_compose'):
+        # cosmogony needs to be run in the cosmogony directory to access libpostal rules
+        cosmogony_dir = ctx.admin.cosmogony.directory
         ctx.run('mkdir -p {ctx.admin.cosmogony.output_dir}'.format(ctx=ctx))
+    else:
+        # for docker the rules are embeded in the docker, we don't have to move
+        cosmogony_dir = '.'
+
+    with ctx.cd(cosmogony_dir):
         cosmogony_file = '{ctx.admin.cosmogony.output_dir}/cosmogony.json'.format(ctx=ctx)
-        run_rust_binary(ctx, 'cosmogony', 'cosmogony', files,
+        run_rust_binary(ctx, '', 'cosmogony', files,
         '--input {ctx.osm_file} \
         --output {cosmogony_file}'.format(ctx=ctx, cosmogony_file=cosmogony_file))
         ctx.admin.cosmogony.file = cosmogony_file
@@ -93,7 +100,7 @@ def load_pois(ctx, files=[]):
             logging.warn("for the moment we can't load data in postgres for fafnir")
 
         logging.info("importing poi with fafnir")
-        run_rust_binary(ctx, 'fafnir', 'fafnir', files,
+        run_rust_binary(ctx, '', 'fafnir', files,
             '--es {ctx.es} \
             --pg {fafnir_conf.pg}'.format(ctx=ctx, fafnir_conf=fafnir_conf))
             
@@ -125,14 +132,14 @@ def load_all(ctx, files=[]):
     if _use_cosmogony(ctx):
         logging.info('using cosmogony')
         if not ctx.admin.cosmogony.get('file'):
-            generate_cosmogony(ctx)
-        load_cosmogony(ctx)
+            generate_cosmogony(ctx, files)
+        load_cosmogony(ctx, files)
 
-    load_osm(ctx)
+    load_osm(ctx, files)
 
-    load_addresses(ctx)
+    load_addresses(ctx, files)
 
-    load_pois(ctx)
+    load_pois(ctx, files)
 
 @task(iterable=['files'])
 def compose_up(ctx, files=[]):
@@ -145,7 +152,8 @@ def compose_up(ctx, files=[]):
     ctx.run_on_docker_compose = True
     files_args = _build_docker_files_args(files)
 
-    ctx.run('docker-compose {files} up -d'.format(files=files_args))
+    ctx.run('docker-compose {files} pull'.format(files=files_args))
+    ctx.run('docker-compose {files} up -d --build'.format(files=files_args))
 
     _wait_for_es(ctx, files)
 
@@ -172,6 +180,9 @@ def test(ctx, files=None):
         raise Exception("geocoder-tester can run only in docker-compose mode")
     logging.info('running geocoder-tester')
 
+    # we update the images in tester_docker-compose
+    ctx.run('docker-compose -f tester_docker-compose.yml pull')
+    ctx.run('docker-compose -f tester_docker-compose.yml build')
     files_args = _build_docker_files_args(['tester_docker-compose.yml'] + files)
 
     ctx.run('docker-compose {files} run --rm geocoder-tester'.format(files=files_args))
@@ -188,7 +199,7 @@ def _wait_for_es(ctx, files):
 @task(iterable=['files'])
 def load_in_docker_and_test(ctx, files=[]):
     compose_up(ctx, files)
-    load_all(ctx)
+    load_all(ctx, files)
     test(ctx, files)
     compose_down(ctx, files)
 
