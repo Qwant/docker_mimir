@@ -1,0 +1,35 @@
+version: '3'
+
+services:
+  mimir:
+    image: navitia/mimirsbrunn
+
+    volumes:
+      - ${OSM_DIR}:/data/osm
+      - ${ADDR_DIR:-addr}:/data/addresses
+      - ${COSMOGONY_DIR:-cosmogony}:/data/cosmogony
+    environment:
+      - RUST_LOG=info,hyper=warn,rs_es=warn
+
+  es:
+    image: elasticsearch:2
+    ports:
+      - 9200
+
+  bragi:
+    image: navitia/bragi
+    environment:
+      - BRAGI_ES=http://es:9200
+    ports:
+     - 4000
+
+  cosmogony:
+    image: osmwithoutborders/cosmogony
+
+    volumes:
+      - ${OSM_DIR}:/data/osm
+      - ${COSMOGONY_DIR:-cosmogony}:/data/cosmogony
+
+volumes:
+  cosmogony:
+  addr:

@@ -1,0 +1,10 @@
+# example file to run mimir in docker, the file path must be changed
+osm_file: /data/osm/luxembourg-latest.osm.pbf
+es: http://es:9200
+
+admin:
+  cosmogony:
+    file: /data/cosmogony/cosmo_lux.json
+
+addresses:
+  oa_file: /data/addresses/luxembourg.csv
