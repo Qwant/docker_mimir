@@ -31,6 +31,8 @@ dataset: default
 #   fafnir:
 #     ## connection string to postgresql (format: postgres://{user}:{pwd}@{host}:{post})
 #     pg:
+#     ## number of threads to use
+#     nb_threads:
 #   ## If present will use osm2mimir to import the poi
 #   osm:
 

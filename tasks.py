@@ -56,12 +56,18 @@ def load_osm(ctx, files=[]):
             for lvl in osm_args['levels']:
                 admin_args += ' --level {}'.format(lvl)
 
+    poi_conf = ctx.get('poi')
+    import_poi = ''
+    if poi_conf and 'osm' in poi_conf:
+        import_poi = '--import-poi'
+
     run_rust_binary(ctx, 'mimir', 'osm2mimir', files,
         '--input {ctx.osm_file} \
         --connection-string {ctx.es} \
         --dataset {ctx.dataset}\
         --import-way \
-        {import_admin}'.format(ctx=ctx, import_admin=admin_args))
+        {import_admin} \
+        {import_poi}'.format(ctx=ctx, import_admin=admin_args, import_poi=import_poi))
 
 
 @task()
@@ -87,31 +93,30 @@ def load_addresses(ctx, files=[]):
 
 
 @task()
-def load_pois(ctx, files=[]):
+def load_fafnir_pois(ctx, files=[]):
     poi_conf = ctx.get('poi')
     if not _is_config_object(poi_conf):
         logging.info("no poi to import")
         return
 
     fafnir_conf = poi_conf.get('fafnir')
-    if _is_config_object(fafnir_conf):
-        if fafnir_conf.get('load_db') is True:
-            # TODO import data in PG
-            logging.warn("for the moment we can't load data in postgres for fafnir")
+    if not _is_config_object(fafnir_conf):
+        return
+    logging.info("fafnir {}".format(fafnir_conf))
 
-        logging.info("importing poi with fafnir")
-        run_rust_binary(ctx, '', 'fafnir', files,
-            '--es {ctx.es} \
-            --pg {fafnir_conf.pg}'.format(ctx=ctx, fafnir_conf=fafnir_conf))
-            
-    if 'osm' in poi_conf:
-        logging.info("importing poi from osm")
-        # TODO take a custom poi_config
-        run_rust_binary(ctx, 'mimir', 'osm2mimir', files,
-            '--input {ctx.osm_file} \
-            --connection-string {ctx.es} \
-            --dataset {ctx.dataset}\
-            --import-poi'.format(ctx=ctx))
+    if fafnir_conf.get('load_db') is True:
+        # TODO import data in PG
+        logging.warn("for the moment we can't load data in postgres for fafnir")
+
+    nb_threads_conf = fafnir_conf.get("nb_threads")
+    nb_threads = '--nb-threads {}'.format(nb_threads_conf) if nb_threads_conf else ''
+
+    logging.info("importing poi with fafnir")
+    run_rust_binary(ctx, '', 'fafnir', files,
+        '--es {ctx.es} \
+        {nb_threads} \
+        --dataset {ctx.dataset}\
+        --pg {pg}'.format(ctx=ctx, pg=fafnir_conf["pg"], nb_threads=nb_threads))
 
 
 def _use_cosmogony(ctx):
@@ -135,11 +140,11 @@ def load_all(ctx, files=[]):
             generate_cosmogony(ctx, files)
         load_cosmogony(ctx, files)
 
-    load_osm(ctx, files)
-
     load_addresses(ctx, files)
 
-    load_pois(ctx, files)
+    load_osm(ctx, files)
+
+    load_fafnir_pois(ctx, files)
 
 @task(iterable=['files'])
 def compose_up(ctx, files=[]):
