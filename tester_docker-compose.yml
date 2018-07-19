@@ -5,7 +5,7 @@ services:
     image: qwantresearch/geocoder-tester
 
     volumes:
-    - ./results:/results
+    - ${RESULT_DIR:-./results}:/results
 
   pinger:
     image: byrnedo/alpine-curl
