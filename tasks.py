@@ -3,6 +3,8 @@ from invoke import task
 from invoke.config import DataProxy
 import logging
 from retrying import retry
+from datetime import timedelta
+from time import time
 
 logging.basicConfig(level=logging.INFO)
 
@@ -13,8 +15,11 @@ def run_rust_binary(ctx, container, bin, files, params):
         files_args = _build_docker_files_args(files)
         cmd = 'docker-compose {files} run --rm {container} {cmd}'.format(files=files_args, container=container, cmd=cmd)
 
+    logging.info('{sep} {msg} {sep}'.format(sep='*' * 15, msg = bin))
     logging.info('running: {}'.format(cmd))
+    start = time()
     ctx.run(cmd)
+    logging.info('{sep} {bin} ran in {time} {sep}'.format(sep='*' * 15, bin=bin, time=timedelta(seconds=time() - start)))
 
 
 @task()
