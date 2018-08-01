@@ -190,9 +190,9 @@ def run_all(ctx, url=None, name="geocoder-tester", regions=None):
 
     report_file = os.path.join(ctx.output_dir, f"report.log")
     with open(report_file, "w") as log_file:
-        log_file.writelines(f"report on '{name}'\n")
-        log_file.writelines(f"queries make on {url} | version = {version} \n")
-        log_file.writelines(report)
+        log_file.write(f"report on '{name}'\n")
+        log_file.write(f"queries make on {url} | version = {version} \n")
+        log_file.write(report)
 
     # print also a csv to better compare the results
     csv_file = os.path.join(ctx.output_dir, f"report.csv")
