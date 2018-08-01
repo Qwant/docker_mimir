@@ -73,7 +73,7 @@ def _safe_cast(val, to_type):
     try:
         return to_type(val)
     except (ValueError, TypeError):
-        return None
+        return to_type()
 
 
 def _get_results(region, category, pytest_logs):
@@ -118,7 +118,7 @@ def run_pytest(ctx, url, name, region, category):
     else:
         selector = category["selector"]
 
-    additional_args = " ".join(ctx.additional_pytest_args)
+    additional_args = " ".join(ctx.get('additional_pytest_args', []))
     test_name = f"{region}_{category_name}"
     report_file = os.path.join(ctx.output_dir, f"{test_name}_report.txt")
     py_test = " ".join(
@@ -164,9 +164,11 @@ def _get_version(url):
 
 
 @task(default=True)
-def run_all(ctx, url=None, name="geocoder-tester"):
+def run_all(ctx, url=None, name="geocoder-tester", regions=None):
     _init_output_dir(ctx, name)
     url = url or ctx.url
+    if regions:  # we use this parameter to override the categories
+        ctx.regions = regions.split(',')
     if not url:
         raise Exception("no url provided")
 
