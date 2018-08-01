@@ -73,7 +73,7 @@ def _safe_cast(val, to_type):
     try:
         return to_type(val)
     except (ValueError, TypeError):
-        return to_type()
+        return None
 
 
 def _get_results(region, category, pytest_logs):
@@ -84,8 +84,9 @@ def _get_results(region, category, pytest_logs):
         logging.info(l)
         match = RESULT_PATTERN.match(l)
         if match:
-            if 'failed' in match.groupdict():
-                failed = _safe_cast(match.group("failed"), int)
+            fail_match = match.group('failed')
+            if fail_match:
+                failed = _safe_cast(fail_match, int)
             else:
                 failed = 0
             success = _safe_cast(match.group("success"), int)
