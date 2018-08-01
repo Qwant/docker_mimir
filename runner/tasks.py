@@ -65,7 +65,7 @@ def _pretty_print(dicts, keys):
 RESULT_LINE_PATTERN = re.compile("===+.*===+")
 
 RESULT_PATTERN = re.compile(
-    "===+ (?P<failed>\d+) failed, (?P<success>\d+) passed.*in (?P<time>.*) seconds.*"
+    "===+( (?P<failed>\d+) failed,)? (?P<success>\d+) passed.*in (?P<time>.*) seconds.*"
 )
 
 
@@ -84,7 +84,10 @@ def _get_results(region, category, pytest_logs):
         logging.info(l)
         match = RESULT_PATTERN.match(l)
         if match:
-            failed = _safe_cast(match.group("failed"), int)
+            if 'failed' in match.groupdict():
+                failed = _safe_cast(match.group("failed"), int)
+            else:
+                failed = 0
             success = _safe_cast(match.group("success"), int)
             time = _safe_cast(match.group("time"), float)
             duration = datetime.timedelta(seconds=time) if time else None
@@ -131,7 +134,6 @@ def run_pytest(ctx, url, name, region, category):
 
     logging.info(f"runnning {py_test}")
     log_file = os.path.join(ctx.output_dir, f"{test_name}.log")
-    logging.info(f"runnning {log_file} ----- {os.path.dirname(log_file)}")
     if not os.path.exists(os.path.dirname(log_file)):
         # we create the parent dir if needed
         os.makedirs(os.path.dirname(log_file))
