@@ -246,7 +246,12 @@ def test(ctx, files=None):
     ctx.run("docker-compose -f tester_docker-compose.yml build")
     files_args = _build_docker_files_args(["tester_docker-compose.yml"] + files)
 
-    ctx.run("docker-compose {files} run --rm geocoder-tester-runner".format(files=files_args))
+    region = ctx.get('geocoder_tester_region')
+    if region:
+        additional_args = "run-all --regions {}".format(region)
+    else:
+        additional_args = ""
+    ctx.run("docker-compose {files} run --rm geocoder-tester-runner {args}".format(files=files_args, args=additional_args))
 
 
 @retry(stop_max_delay=60000, wait_fixed=100)
