@@ -65,7 +65,7 @@ def _pretty_print(dicts, keys):
 RESULT_LINE_PATTERN = re.compile("===+.*===+")
 
 RESULT_PATTERN = re.compile(
-    "===+( (?P<failed>\d+) failed,)? (?P<success>\d+) passed.*in (?P<time>.*) seconds.*"
+    "===+( (?P<failed>\d+) failed,)? ((?P<success>\d+) passed)?.*in (?P<time>.*) seconds.*"
 )
 
 
@@ -85,15 +85,13 @@ def _get_results(region, category, pytest_logs):
         match = RESULT_PATTERN.match(l)
         if match:
             fail_match = match.group('failed')
-            if fail_match:
-                failed = _safe_cast(fail_match, int)
-            else:
-                failed = 0
-            success = _safe_cast(match.group("success"), int)
+            failed = _safe_cast(fail_match, int) if fail_match else 0
+            success_match = match.group('success')
+            success = _safe_cast(success_match, int) if success_match else 0
             time = _safe_cast(match.group("time"), float)
             duration = datetime.timedelta(seconds=time) if time else None
             total = failed + success
-            ratio = success / total
+            ratio = success / total if total else 0
             res.update(
                 {
                     "failed": failed,
