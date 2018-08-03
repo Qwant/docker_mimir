@@ -65,8 +65,41 @@ def _pretty_print(dicts, keys):
 RESULT_LINE_PATTERN = re.compile("===+.*===+")
 
 RESULT_PATTERN = re.compile(
-    "===+( (?P<failed>\d+) failed,)? ((?P<success>\d+) passed)?.*in (?P<time>.*) seconds.*"
+    "===+( (?P<failed>\d+) failed)?,? ((?P<success>\d+) passed)?.*in (?P<time>.*) seconds.*"
 )
+
+
+def _parse_log_line(line):
+    """
+    >>> _parse_log_line("========= 1 failed, 1 passed in 1 seconds ======")
+    {'failed': 1, 'total': 2, 'duration': '0:00:01', 'ratio': '50%'}
+    >>> _parse_log_line("========= 1 failed in 1 seconds ======")
+    {'failed': 1, 'total': 1, 'duration': '0:00:01', 'ratio': '0%'}
+    >>> _parse_log_line("========= 1 passed in 1 seconds ======")
+    {'failed': 0, 'total': 1, 'duration': '0:00:01', 'ratio': '100%'}
+    >>> _parse_log_line("========= no tests ran in 1 seconds ======")
+    {'failed': 0, 'total': 0, 'duration': '0:00:01', 'ratio': '0%'}
+    >>> _parse_log_line("========= 1 deselected in 1 seconds ======")
+    {'failed': 0, 'total': 0, 'duration': '0:00:01', 'ratio': '0%'}
+    """
+    match = RESULT_PATTERN.match(line)
+    if not match:
+        logging.error(f"impossible to parse results: {line}")
+        return {}
+    fail_match = match.group("failed")
+    failed = _safe_cast(fail_match, int) if fail_match else 0
+    success_match = match.group("success")
+    success = _safe_cast(success_match, int) if success_match else 0
+    time = _safe_cast(match.group("time"), float)
+    duration = datetime.timedelta(seconds=time) if time else None
+    total = failed + success
+    ratio = success / total if total else 0
+    return {
+        "failed": failed,
+        "total": total,
+        "duration": str(duration),
+        "ratio": f"{ratio:.0%}",
+    }
 
 
 def _safe_cast(val, to_type):
@@ -82,26 +115,7 @@ def _get_results(region, category, pytest_logs):
         if not RESULT_LINE_PATTERN.match(l):
             continue
         logging.info(l)
-        match = RESULT_PATTERN.match(l)
-        if match:
-            fail_match = match.group('failed')
-            failed = _safe_cast(fail_match, int) if fail_match else 0
-            success_match = match.group('success')
-            success = _safe_cast(success_match, int) if success_match else 0
-            time = _safe_cast(match.group("time"), float)
-            duration = datetime.timedelta(seconds=time) if time else None
-            total = failed + success
-            ratio = success / total if total else 0
-            res.update(
-                {
-                    "failed": failed,
-                    "total": total,
-                    "duration": str(duration),
-                    "ratio": f"{ratio:.0%}",
-                }
-            )
-            return res
-        logging.error(f"impossible to parse results: {l}")
+        res.update(_parse_log_line(l))
         return res
     return res
 
@@ -117,7 +131,7 @@ def run_pytest(ctx, url, name, region, category):
     else:
         selector = category["selector"]
 
-    additional_args = " ".join(ctx.get('additional_pytest_args', []))
+    additional_args = " ".join(ctx.get("additional_pytest_args", []))
     test_name = f"{region}_{category_name}"
     report_file = os.path.join(ctx.output_dir, f"{test_name}_report.txt")
     py_test = " ".join(
@@ -167,11 +181,11 @@ def run_all(ctx, url=None, name="geocoder-tester", regions=None):
     _init_output_dir(ctx, name)
     url = url or ctx.url
     if regions:  # we use this parameter to override the categories
-        ctx.regions = regions.split(',')
+        ctx.regions = regions.split(",")
     if not url:
         raise Exception("no url provided")
 
-    logging.info(f'testing {name} on {url}')
+    logging.info(f"testing {name} on {url}")
 
     res = []
 
