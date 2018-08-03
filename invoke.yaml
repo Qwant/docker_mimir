@@ -43,3 +43,5 @@ dataset: default
 #   # PATH to the bano file
 #   bano_file:
 
+## name of the geocoder region to run. default is france
+# geocoder_tester_region: luxembourg

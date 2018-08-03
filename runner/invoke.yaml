@@ -1,0 +1,22 @@
+base_output_dir: ./results
+
+geocoder_sources: ../../geocoder-tester
+
+url:
+
+regions:
+  - france
+
+categories:
+  - name: fuzzy
+    selector: fuzzy
+  - name: admins 
+    selector: test_admin
+  - name: poi
+    selector: test_poi
+  - name: autre
+    remaining_tests: True
+
+additional_pytest_args:
+  - "--check-duplicates=10"
+  - "-n 12"

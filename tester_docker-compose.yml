@@ -1,11 +1,13 @@
 version: '3'
 
 services:
-  geocoder-tester:
-    image: qwantresearch/geocoder-tester
-
+  geocoder-tester-runner:
+    build: runner/
     volumes:
-    - ${RESULT_DIR:-./results}:/results
+      - ${RESULT_DIR:-./results}:/app/runner/results
+    environment:
+      - INVOKE_URL=http://bragi:4000/autocomplete
+      - INVOKE_GEOCODER_SOURCES=/app/geocoder_tester
 
   pinger:
     image: byrnedo/alpine-curl
