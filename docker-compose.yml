@@ -32,6 +32,9 @@ services:
 
   fafnir:
     image: qwantresearch/fafnir
+    environment:
+      - RUST_LOG=info,hyper=warn,rs_es=warn
+
 
 volumes:
   cosmogony:
