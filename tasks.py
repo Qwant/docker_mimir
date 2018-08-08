@@ -157,7 +157,9 @@ def load_fafnir_pois(ctx, files=[]):
         logging.warn("for the moment we can't load data in postgres for fafnir")
 
     nb_threads_conf = fafnir_conf.get("nb_threads")
+    bbox_conf = fafnir_conf.get("bounding-box")
     nb_threads = "--nb-threads {}".format(nb_threads_conf) if nb_threads_conf else ""
+    bbox = '--bounding-box="{}"'.format(bbox_conf) if bbox_conf else ""
 
     logging.info("importing poi with fafnir")
     run_rust_binary(
@@ -167,9 +169,10 @@ def load_fafnir_pois(ctx, files=[]):
         files,
         "--es {ctx.es} \
         {nb_threads} \
+        {bbox} \
         --dataset {ctx.dataset}\
         --pg {pg}".format(
-            ctx=ctx, pg=fafnir_conf["pg"], nb_threads=nb_threads
+            ctx=ctx, pg=fafnir_conf["pg"], nb_threads=nb_threads, bbox=bbox
         ),
     )
 
