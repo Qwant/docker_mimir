@@ -33,6 +33,8 @@ dataset: default
 #     pg:
 #     ## number of threads to use
 #     nb_threads:
+#     ## bounding box
+#     bounding-box:
 #   ## If present will use osm2mimir to import the poi
 #   osm:
 

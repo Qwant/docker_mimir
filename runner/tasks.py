@@ -48,7 +48,7 @@ def _pretty_print(dicts, keys):
     # Headers.
     out.append(tpl.format(**dict(zip(keys, keys))))
     # Separators line.
-    out.append(tpl.format(**dict(zip(keys, ["—" * lengths[k] for k in keys]))))
+    out.append(tpl.format(**dict(zip(keys, ["-" * lengths[k] for k in keys]))))
     for d in dicts:
         row = {}
         l = lengths.copy()
