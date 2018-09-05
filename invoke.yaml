@@ -1,11 +1,12 @@
-## MANDATORY path to the OpenStreetMap pbf file
-#osm_file:
-
 ## MANDATORY url to elasticsearch
 # es:
 
 ## Name of the dataset
 dataset: default
+
+osm: # A file or a url MUST be defined
+  file: # Ignored if a url is defined
+  url: # Url to a .osm.pbf file that will be downloaded
 
 # admin:
 #   ## If present will use the admins from cosmogony
@@ -38,12 +39,16 @@ dataset: default
 #   ## If present will use osm2mimir to import the poi
 #   osm:
 
-# addresses:
-#   # PATH to the openaddresses file
-#   oa_file:
+addresses:
+  oa:
+    file: # Ignored 'download' is defined
+    download: # List of openaddresses datasets to download
+      # - lu/countrywide
+      # - fr/paris
 
-#   # PATH to the bano file
-#   bano_file:
+  bano:
+    file: # PATH to the bano file, ignored if url is defined
+    url: #https://bano.openstreetmap.fr/data/full.csv.gz
 
 ## name of the geocoder region to run. default is france
 # geocoder_tester_region: luxembourg
