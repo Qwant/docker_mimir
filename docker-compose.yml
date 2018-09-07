@@ -4,14 +4,14 @@ services:
   download:
     build: ./download
     volumes:
-      - ${OSM_DIR:-dataosm}:/data/osm
+      - ${OSM_DIR:-osm}:/data/osm
       - ${ADDR_DIR:-addr}:/data/addresses
       - ${COSMOGONY_DIR:-cosmogony}:/data/cosmogony
 
   mimir:
     image: navitia/mimirsbrunn
     volumes:
-      - ${OSM_DIR:-dataosm}:/data/osm
+      - ${OSM_DIR:-osm}:/data/osm
       - ${ADDR_DIR:-addr}:/data/addresses
       - ${COSMOGONY_DIR:-cosmogony}:/data/cosmogony
     environment:
@@ -32,7 +32,7 @@ services:
   cosmogony:
     image: osmwithoutborders/cosmogony
     volumes:
-      - ${OSM_DIR:-dataosm}:/data/osm
+      - ${OSM_DIR:-osm}:/data/osm
       - ${COSMOGONY_DIR:-cosmogony}:/data/cosmogony
 
   fafnir:
@@ -42,6 +42,6 @@ services:
 
 
 volumes:
-  dataosm:
+  osm:
   cosmogony:
   addr:

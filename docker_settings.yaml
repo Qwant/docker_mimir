@@ -119,3 +119,5 @@ addresses:
       # - fr/vosges
       # - fr/yonne
       # - fr/yvelines
+
+geocoder_tester_region: luxembourg

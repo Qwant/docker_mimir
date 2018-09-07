@@ -41,7 +41,7 @@ osm: # A file or a url MUST be defined
 
 addresses:
   oa:
-    file: # Ignored 'download' is defined
+    file: # Path to .csv, or a directory with multiple .csv (ignored if 'download' is defined)
     download: # List of openaddresses datasets to download
       # - lu/countrywide
       # - fr/paris
