@@ -1,4 +1,4 @@
-
+import os
 from invoke import task
 from invoke.config import DataProxy
 import logging
@@ -27,6 +27,41 @@ def run_rust_binary(ctx, container, bin, files, params):
         )
     )
 
+@task()
+def download(ctx, files=[]):
+    if not ctx.get("run_on_docker_compose") \
+       and any((ctx.osm.url, ctx.addresses.bano.url, ctx.addresses.oa.download)):
+       raise Exception('Cannot download datasets when not running on docker-compose')
+
+    files_args = _build_docker_files_args(files)
+
+    if ctx.osm.url:
+        file_name = os.path.basename(ctx.osm.url)
+        ctx.osm.file = os.path.join('/data/osm', file_name)
+        ctx.run(
+            'docker-compose {files} run --rm download'
+            ' download-osm --osm-url={osm_url} --output-file={output_file}'.format(
+                files=files_args, osm_url=ctx.osm.url, output_file=ctx.osm.file
+            )
+        )
+    if ctx.addresses.bano.url:
+        ctx.addresses.bano.file = "/data/addresses/bano.csv"
+        ctx.run(
+            'docker-compose {files} run --rm download'
+            ' download-bano --bano-url={bano_url} --output-file={output_file}'.format(
+                files=files_args, bano_url=ctx.addresses.bano.url,
+                output_file=ctx.addresses.bano.file
+            )
+        )
+    if ctx.addresses.oa.download:
+        ctx.addresses.oa.file = "/data/addresses/oa"
+        ctx.run(
+            'docker-compose {files} run --rm download'
+            ' download-oa --oa-files={oa_files}'.format(
+                files=files_args, oa_files=",".join(ctx.addresses.oa.download)
+            )
+        )
+
 
 @task()
 def generate_cosmogony(ctx, files=[]):
@@ -48,7 +83,7 @@ def generate_cosmogony(ctx, files=[]):
             "",
             "cosmogony",
             files,
-            "--input {ctx.osm_file} \
+            "--input {ctx.osm.file} \
         --output {cosmogony_file}".format(
                 ctx=ctx, cosmogony_file=cosmogony_file
             ),
@@ -93,7 +128,7 @@ def load_osm(ctx, files=[]):
         "mimir",
         "osm2mimir",
         files,
-        "--input {ctx.osm_file} \
+        "--input {ctx.osm.file} \
         --connection-string {ctx.es} \
         --dataset {ctx.dataset}\
         --import-way \
@@ -111,20 +146,20 @@ def load_addresses(ctx, files=[]):
         logging.info("no addresses to import")
         return
 
-    if "bano_file" in addr_config:
+    if addr_config.get('bano', {}).get('file'):
         logging.info("importing bano addresses")
         run_rust_binary(
             ctx,
             "mimir",
             "bano2mimir",
             files,
-            "--input {ctx.addresses.bano_file} \
+            "--input {ctx.addresses.bano.file} \
             --connection-string {ctx.es} \
             --dataset {ctx.dataset}".format(
                 ctx=ctx
             ),
         )
-    if "oa_file" in addr_config:
+    if addr_config.get('oa', {}).get('file'):
         logging.info("importing oa addresses")
         # TODO take multiples oa files ?
         run_rust_binary(
@@ -132,7 +167,7 @@ def load_addresses(ctx, files=[]):
             "mimir",
             "openaddresses2mimir",
             files,
-            "--input {ctx.addresses.oa_file} \
+            "--input {ctx.addresses.oa.file} \
             --connection-string {ctx.es} \
             --dataset {ctx.dataset}".format(
                 ctx=ctx
@@ -192,6 +227,8 @@ def load_all(ctx, files=[]):
     default task called if `invoke` is run without args
     This is the main tasks that import all the datas into mimir
     """
+    download(ctx, files)
+
     if _use_cosmogony(ctx):
         logging.info("using cosmogony")
         if not ctx.admin.cosmogony.get("file"):

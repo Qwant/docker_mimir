@@ -1,10 +1,123 @@
-# example file to run mimir in docker, the file path must be changed
-osm_file: /data/osm/luxembourg-latest.osm.pbf
+# example file to run mimir in docker
+
 es: http://es:9200
+
+osm:
+  url: https://download.geofabrik.de/europe/luxembourg-latest.osm.pbf
 
 admin:
   cosmogony:
-    file: /data/cosmogony/cosmo_lux.json
+    output_dir: /data/cosmogony
 
 addresses:
-  oa_file: /data/addresses/luxembourg.csv
+  oa:
+    download:
+      - lu/countrywide
+
+      ## Files for France:
+
+      # - fr/ain
+      # - fr/aisne
+      # - fr/allier
+      # - fr/alpes_de_haute_provence
+      # - fr/alpes_maritimes
+      # - fr/ardeche
+      # - fr/ardennes
+      # - fr/ariege
+      # - fr/aube
+      # - fr/aude
+      # - fr/aveyron
+      # - fr/bas_rhin
+      # - fr/bouches_du_rhone
+      # - fr/calvados
+      # - fr/cantal
+      # - fr/charente
+      # - fr/charente_maritime
+      # - fr/cher
+      # - fr/colmar
+      # - fr/correze
+      # - fr/corse_du_sud
+      # - fr/cote_dor
+      # - fr/cotes_darmor
+      # - fr/creuse
+      # - fr/deux_sevres
+      # - fr/dordogne
+      # - fr/doubs
+      # - fr/drome
+      # - fr/essonne
+      # - fr/eure
+      # - fr/eure_et_loir
+      # - fr/finistere
+      # - fr/gard
+      # - fr/gers
+      # - fr/gironde
+      # - fr/guadeloupe
+      # - fr/guyane
+      # - fr/haute_corse
+      # - fr/haute_garonne
+      # - fr/haute_loire
+      # - fr/haute_marne
+      # - fr/haute_rhin
+      # - fr/haute_saone
+      # - fr/haute_savoie
+      # - fr/haute_vienne
+      # - fr/hautes_alpes
+      # - fr/hautes_pyrenees
+      # - fr/hauts_de_seine
+      # - fr/herault
+      # - fr/ille_et_vilaine
+      # - fr/indre
+      # - fr/indre_et_loire
+      # - fr/isere
+      # - fr/jura
+      # - fr/la_reunion
+      # - fr/landes
+      # - fr/loir_et_cher
+      # - fr/loire
+      # - fr/loire_atlantique
+      # - fr/loiret
+      # - fr/lot
+      # - fr/lot_et_garonne
+      # - fr/lozere
+      # - fr/maine_et_loire
+      # - fr/manche
+      # - fr/marne
+      # - fr/martinique
+      # - fr/mayenne
+      # - fr/mayotte
+      # - fr/meurthe_et_moselle
+      # - fr/meuse
+      # - fr/montpellier
+      # - fr/morbihan
+      # - fr/moselle
+      # - fr/nievre
+      # - fr/nord
+      # - fr/oise
+      # - fr/orne
+      # - fr/paris
+      # - fr/pas_de_calais
+      # - fr/puy_de_dome
+      # - fr/pyrenees_atlantiques
+      # - fr/pyrenees_orientales
+      # - fr/rhone
+      # - fr/saone_et_loire
+      # - fr/sarthe
+      # - fr/savoie
+      # - fr/seien_et_marne  # (sic) typo in openadresses data
+      # - fr/seine_maritime
+      # - fr/seine_saint_denis
+      # - fr/somme
+      # - fr/tarn
+      # - fr/tarn_et_garonne
+      # - fr/territoire_de_belfort
+      # - fr/val_de_marne
+      # - fr/val_doise
+      # - fr/var
+      # - fr/vaucluse
+      # - fr/vendee
+      # - fr/vienne
+      # - fr/vosges
+      # - fr/yonne
+      # - fr/yvelines
+
+geocoder_tester_region: luxembourg

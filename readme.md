@@ -4,7 +4,7 @@ The pipeline is based on [invoke](https://github.com/pyinvoke/invoke).
 
 Invoke can be configured from various way, the easiest would be a create a custom configuration file.
 
-The default configuration file ins `invoke.yaml`.
+The default configuration file is `invoke.yaml`.
 All possible variables are commented in this file.
 
 To run the pipeline you need [pipenv](https://github.com/pypa/pipenv)
@@ -24,8 +24,6 @@ The easiest way to achieve this is to export the path before:
 
 You can also use docker-compose to run mimir.
 
-You need to at least set the environment variable `OSM_DIR` (see below the mean to set it).
-
 To configure some stuff, some environment variable can be set (in cli or in a `.env` file in the directory).
 
 The env variables that can be set are:
@@ -41,6 +39,8 @@ Note: you don't need to set the variable that are not used in your configuration
 Once the variables are set, to run mimir you need to do:
 
 `pipenv run inv -f docker_settings.yaml load-in-docker-and-test`
+
+The file "docker_settings.yaml" contains an example configuration to download and import data about Luxembourg.
 
 This will:
 
