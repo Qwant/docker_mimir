@@ -5,7 +5,7 @@ import re
 import logging
 import requests
 import csv
-
+import json
 
 logging.basicConfig(level=logging.INFO)
 
@@ -204,8 +204,18 @@ def run_all(ctx, url=None, name="geocoder-tester", regions=None):
     report_file = os.path.join(ctx.output_dir, f"report.log")
     with open(report_file, "w") as log_file:
         log_file.write(f"report on '{name}'\n")
-        log_file.write(f"queries make on {url} | version = {version} \n")
+        log_file.write(f"queries made on {url} | version = {version} \n")
         log_file.write(report)
+
+    report_file = os.path.join(ctx.output_dir, f"report.json")
+    with open(report_file, "w") as log_file:
+        data = {
+            'name': name,
+            'url': url,
+            'version': version,
+            'md_report': report
+        }
+        log_file.write(json.dumps(data, indent=2))
 
     # print also a csv to better compare the results
     csv_file = os.path.join(ctx.output_dir, f"report.csv")
