@@ -148,6 +148,9 @@ def load_addresses(ctx, files=[]):
 
     if addr_config.get('bano', {}).get('file'):
         logging.info("importing bano addresses")
+
+        nb_threads_conf = ctx.addresses.bano.get("nb_threads")
+        nb_threads = "--nb-threads {}".format(nb_threads_conf) if nb_threads_conf else ""
         run_rust_binary(
             ctx,
             "mimir",
@@ -155,12 +158,15 @@ def load_addresses(ctx, files=[]):
             files,
             "--input {ctx.addresses.bano.file} \
             --connection-string {ctx.es} \
+            {nb_threads} \
             --dataset {ctx.dataset}".format(
-                ctx=ctx
+                ctx=ctx, nb_threads=nb_threads
             ),
         )
     if addr_config.get('oa', {}).get('file'):
         logging.info("importing oa addresses")
+        nb_threads_conf = ctx.addresses.oa.get("nb_threads")
+        nb_threads = "--nb-threads {}".format(nb_threads_conf) if nb_threads_conf else ""
         # TODO take multiples oa files ?
         run_rust_binary(
             ctx,
@@ -169,8 +175,9 @@ def load_addresses(ctx, files=[]):
             files,
             "--input {ctx.addresses.oa.file} \
             --connection-string {ctx.es} \
+            {nb_threads} \
             --dataset {ctx.dataset}".format(
-                ctx=ctx
+                ctx=ctx, nb_threads=nb_threads
             ),
         )
 

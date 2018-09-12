@@ -11,6 +11,7 @@ admin:
 
 addresses:
   oa:
+    nb_threads: 4
     download:
       - lu/countrywide
 
