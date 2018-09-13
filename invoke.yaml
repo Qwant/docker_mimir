@@ -45,10 +45,12 @@ addresses:
     download: # List of openaddresses datasets to download
       # - lu/countrywide
       # - fr/paris
+    nb_threads: # number of threads to use
 
   bano:
     file: # PATH to the bano file, ignored if url is defined
     url: #https://bano.openstreetmap.fr/data/full.csv.gz
+    nb_threads: # number of threads to use
 
 ## name of the geocoder region to run. default is france
 # geocoder_tester_region: luxembourg
