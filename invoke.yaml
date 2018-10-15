@@ -19,10 +19,14 @@ osm: # A file or a url MUST be defined
 #     output_dir:
 #     ## optional parameter (only if run without docker) cosmogony source directory (to find libpostal)
 #     directory:
+#     nb_shards:  # control the number of shards of the ES index
+#     nb_replicas:  # control the number of replicas of the ES index
 #   ## If present will use the admins from osm
 #   osm:
 #     levels:
 #       - 8
+#     nb_shards:  # control the number of shards of the ES index
+#     nb_replicas:  # control the number of replicas of the ES index
 
 
 
@@ -36,8 +40,12 @@ osm: # A file or a url MUST be defined
 #     nb_threads:
 #     ## bounding box
 #     bounding-box:
+#     nb_shards:  # control the number of shards of the ES index
+#     nb_replicas:  # control the number of replicas of the ES index
 #   ## If present will use osm2mimir to import the poi
 #   osm:
+#     nb_shards:  # control the number of shards of the ES index
+#     nb_replicas:  # control the number of replicas of the ES index
 
 addresses:
   oa:
@@ -46,11 +54,19 @@ addresses:
       # - lu/countrywide
       # - fr/paris
     nb_threads: # number of threads to use
+#   nb_shards:  # control the number of shards of the ES index
+#   nb_replicas:  # control the number of replicas of the ES index
 
   bano:
     file: # PATH to the bano file, ignored if url is defined
     url: #https://bano.openstreetmap.fr/data/full.csv.gz
     nb_threads: # number of threads to use
+#   nb_shards:  # control the number of shards of the ES index
+#   nb_replicas:  # control the number of replicas of the ES index
+
+# street:
+#   nb_shards:  # control the number of shards of the ES index
+#   nb_replicas:  # control the number of replicas of the ES index
 
 ## name of the geocoder region to run. default is france
 # geocoder_tester_region: luxembourg
