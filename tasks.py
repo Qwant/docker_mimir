@@ -114,7 +114,7 @@ def load_cosmogony(ctx, files=[]):
 
 def _get_cli_param(conf_value, cli_param_name):
     if conf_value:
-        return " {param}={value}".format(param=cli_param_name, value=conf_value)
+        return ' {param}="{value}"'.format(param=cli_param_name, value=conf_value)
     return ""
 
 
