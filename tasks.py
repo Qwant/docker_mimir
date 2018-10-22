@@ -94,6 +94,9 @@ def generate_cosmogony(ctx, files=[]):
 @task()
 def load_cosmogony(ctx, files=[]):
     logging.info("loading cosmogony")
+    conf = ctx.admin.cosmogony
+    additional_params = _get_cli_param(conf.get("nb_shards"), "--nb-shards")
+    additional_params += _get_cli_param(conf.get("nb_replicas"), "--nb-replicas")
     run_rust_binary(
         ctx,
         "mimir",
@@ -101,10 +104,18 @@ def load_cosmogony(ctx, files=[]):
         files,
         "--input {ctx.admin.cosmogony.file} \
         --connection-string {ctx.es} \
-        --dataset {ctx.dataset}".format(
-            ctx=ctx
+        --dataset {ctx.dataset} \
+        {additional_params} \
+        ".format(
+            ctx=ctx, additional_params=additional_params
         ),
     )
+
+
+def _get_cli_param(conf_value, cli_param_name):
+    if conf_value is not None and conf_value != "":
+        return ' {param}="{value}"'.format(param=cli_param_name, value=conf_value)
+    return ""
 
 
 @task()
@@ -117,11 +128,19 @@ def load_osm(ctx, files=[]):
             admin_args = "--import-admin"
             for lvl in osm_args["levels"]:
                 admin_args += " --level {}".format(lvl)
+                admin_args += _get_cli_param(osm_args.get("nb_shards"), "--nb-admin-shards")
+                admin_args += _get_cli_param(osm_args.get("nb_replicas"), "--nb-admin-replicas")
 
-    poi_conf = ctx.get("poi")
-    import_poi = ""
-    if poi_conf and "osm" in poi_conf:
-        import_poi = "--import-poi"
+    poi_conf = ctx.get("poi", {}).get('osm')
+    poi_conf = ""
+    if poi_conf:
+        poi_conf = "--import-poi"
+        poi_conf += _get_cli_param(poi_conf.get("nb_shards"), "--nb-poi-shards")
+        poi_conf += _get_cli_param(poi_conf.get("nb_replicas"), "--nb-poi-replicas")
+
+    street_conf = ""
+    street_conf += _get_cli_param(ctx.get('street', {}).get("nb_shards"), "--nb-street-shards")
+    street_conf += _get_cli_param(ctx.get('street', {}).get("nb_replicas"), "--nb-street-replicas")
 
     run_rust_binary(
         ctx,
@@ -133,8 +152,10 @@ def load_osm(ctx, files=[]):
         --dataset {ctx.dataset}\
         --import-way \
         {import_admin} \
-        {import_poi}".format(
-            ctx=ctx, import_admin=admin_args, import_poi=import_poi
+        {poi_conf} \
+        {street_conf} \
+        ".format(
+            ctx=ctx, import_admin=admin_args, poi_conf=poi_conf, street_conf=street_conf
         ),
     )
 
@@ -148,9 +169,10 @@ def load_addresses(ctx, files=[]):
 
     if addr_config.get('bano', {}).get('file'):
         logging.info("importing bano addresses")
-
-        nb_threads_conf = ctx.addresses.bano.get("nb_threads")
-        nb_threads = "--nb-threads {}".format(nb_threads_conf) if nb_threads_conf else ""
+        conf = ctx.addresses.bano
+        additional_params = _get_cli_param(conf.get("nb_threads"), "--nb-threads")
+        additional_params += _get_cli_param(conf.get("nb_shards"), "--nb-shards")
+        additional_params += _get_cli_param(conf.get("nb_replicas"), "--nb-replicas")
         run_rust_binary(
             ctx,
             "mimir",
@@ -158,15 +180,17 @@ def load_addresses(ctx, files=[]):
             files,
             "--input {ctx.addresses.bano.file} \
             --connection-string {ctx.es} \
-            {nb_threads} \
+            {additional_params} \
             --dataset {ctx.dataset}".format(
-                ctx=ctx, nb_threads=nb_threads
+                ctx=ctx, additional_params=additional_params
             ),
         )
     if addr_config.get('oa', {}).get('file'):
         logging.info("importing oa addresses")
-        nb_threads_conf = ctx.addresses.oa.get("nb_threads")
-        nb_threads = "--nb-threads {}".format(nb_threads_conf) if nb_threads_conf else ""
+        conf = ctx.addresses.oa
+        additional_params = _get_cli_param(conf.get("nb_threads"), "--nb-threads")
+        additional_params += _get_cli_param(conf.get("nb_shards"), "--nb-shards")
+        additional_params += _get_cli_param(conf.get("nb_replicas"), "--nb-replicas")
         # TODO take multiples oa files ?
         run_rust_binary(
             ctx,
@@ -175,9 +199,9 @@ def load_addresses(ctx, files=[]):
             files,
             "--input {ctx.addresses.oa.file} \
             --connection-string {ctx.es} \
-            {nb_threads} \
+            {additional_params} \
             --dataset {ctx.dataset}".format(
-                ctx=ctx, nb_threads=nb_threads
+                ctx=ctx, additional_params=additional_params
             ),
         )
 
@@ -198,10 +222,10 @@ def load_fafnir_pois(ctx, files=[]):
         # TODO import data in PG
         logging.warn("for the moment we can't load data in postgres for fafnir")
 
-    nb_threads_conf = fafnir_conf.get("nb_threads")
-    bbox_conf = fafnir_conf.get("bounding-box")
-    nb_threads = "--nb-threads {}".format(nb_threads_conf) if nb_threads_conf else ""
-    bbox = '--bounding-box="{}"'.format(bbox_conf) if bbox_conf else ""
+    additional_params = _get_cli_param(fafnir_conf.get("nb_threads"), "--nb-threads")
+    additional_params += _get_cli_param(fafnir_conf.get("bounding-box"), "--bounding-box")
+    additional_params += _get_cli_param(fafnir_conf.get("nb_shards"), "--nb-shards")
+    additional_params += _get_cli_param(fafnir_conf.get("nb_replicas"), "--nb-replicas")
 
     logging.info("importing poi with fafnir")
     run_rust_binary(
@@ -210,11 +234,10 @@ def load_fafnir_pois(ctx, files=[]):
         "fafnir",
         files,
         "--es {ctx.es} \
-        {nb_threads} \
-        {bbox} \
+        {additional_params} \
         --dataset {ctx.dataset}\
         --pg {pg}".format(
-            ctx=ctx, pg=fafnir_conf["pg"], nb_threads=nb_threads, bbox=bbox
+            ctx=ctx, pg=fafnir_conf["pg"], additional_params=additional_params
         ),
     )
 
