@@ -113,7 +113,7 @@ def load_cosmogony(ctx, files=[]):
 
 
 def _get_cli_param(conf_value, cli_param_name):
-    if conf_value:
+    if conf_value is not None and conf_value != "":
         return ' {param}="{value}"'.format(param=cli_param_name, value=conf_value)
     return ""
 
@@ -138,9 +138,9 @@ def load_osm(ctx, files=[]):
         poi_conf += _get_cli_param(poi_conf.get("nb_shards"), "--nb-poi-shards")
         poi_conf += _get_cli_param(poi_conf.get("nb_replicas"), "--nb-poi-replicas")
 
-    stret_conf = ""
-    stret_conf += _get_cli_param(ctx.get('street', {}).get("nb_shards"), "--nb-street-shards")
-    stret_conf += _get_cli_param(ctx.get('street', {}).get("nb_replicas"), "--nb-street-replicas")
+    street_conf = ""
+    street_conf += _get_cli_param(ctx.get('street', {}).get("nb_shards"), "--nb-street-shards")
+    street_conf += _get_cli_param(ctx.get('street', {}).get("nb_replicas"), "--nb-street-replicas")
 
     run_rust_binary(
         ctx,
@@ -153,9 +153,9 @@ def load_osm(ctx, files=[]):
         --import-way \
         {import_admin} \
         {poi_conf} \
-        {stret_conf} \
+        {street_conf} \
         ".format(
-            ctx=ctx, import_admin=admin_args, poi_conf=poi_conf, stret_conf=stret_conf
+            ctx=ctx, import_admin=admin_args, poi_conf=poi_conf, street_conf=street_conf
         ),
     )
 
