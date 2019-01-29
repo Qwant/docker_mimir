@@ -128,15 +128,15 @@ def load_osm(ctx, files=[]):
             admin_args = "--import-admin"
             for lvl in osm_args["levels"]:
                 admin_args += " --level {}".format(lvl)
-                admin_args += _get_cli_param(osm_args.get("nb_shards"), "--nb-admin-shards")
-                admin_args += _get_cli_param(osm_args.get("nb_replicas"), "--nb-admin-replicas")
+            admin_args += _get_cli_param(osm_args.get("nb_shards"), "--nb-admin-shards")
+            admin_args += _get_cli_param(osm_args.get("nb_replicas"), "--nb-admin-replicas")
 
     poi_conf = ctx.get("poi", {}).get('osm')
-    poi_conf = ""
+    poi_args = ""
     if poi_conf:
-        poi_conf = "--import-poi"
-        poi_conf += _get_cli_param(poi_conf.get("nb_shards"), "--nb-poi-shards")
-        poi_conf += _get_cli_param(poi_conf.get("nb_replicas"), "--nb-poi-replicas")
+        poi_args = "--import-poi"
+        poi_args += _get_cli_param(poi_conf.get("nb_shards"), "--nb-poi-shards")
+        poi_args += _get_cli_param(poi_conf.get("nb_replicas"), "--nb-poi-replicas")
 
     street_conf = ""
     street_conf += _get_cli_param(ctx.get('street', {}).get("nb_shards"), "--nb-street-shards")
@@ -152,10 +152,10 @@ def load_osm(ctx, files=[]):
         --dataset {ctx.dataset}\
         --import-way \
         {import_admin} \
-        {poi_conf} \
+        {poi_args} \
         {street_conf} \
         ".format(
-            ctx=ctx, import_admin=admin_args, poi_conf=poi_conf, street_conf=street_conf
+            ctx=ctx, import_admin=admin_args, poi_args=poi_args, street_conf=street_conf
         ),
     )
 
