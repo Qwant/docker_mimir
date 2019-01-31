@@ -209,12 +209,7 @@ def run_all(ctx, url=None, name="geocoder-tester", regions=None):
 
     report_file = os.path.join(ctx.output_dir, f"report.json")
     with open(report_file, "w") as log_file:
-        data = {
-            'name': name,
-            'url': url,
-            'version': version,
-            'md_report': report
-        }
+        data = {"name": name, "url": url, "version": version, "md_report": report}
         log_file.write(json.dumps(data, indent=2))
 
     # print also a csv to better compare the results
