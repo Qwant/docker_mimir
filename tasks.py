@@ -122,26 +122,60 @@ def _get_cli_param(conf_value, cli_param_name):
 
 
 @task()
-def load_osm(ctx, files=[]):
-    logging.info("importing data from osm")
-    admin_args = ""
-    if not _use_cosmogony(ctx):
-        osm_args = ctx.admin.get("osm")
-        if _is_config_object(osm_args):
-            admin_args = "--import-admin"
-            for lvl in osm_args["levels"]:
-                admin_args += " --level {}".format(lvl)
-            admin_args += _get_cli_param(osm_args.get("nb_shards"), "--nb-admin-shards")
-            admin_args += _get_cli_param(
-                osm_args.get("nb_replicas"), "--nb-admin-replicas"
-            )
+def load_osm_admins(ctx, files=[]):
+    logging.info("importing admins from osm")
+    osm_param = ctx.admin.get("osm")
+    if not osm_param:
+        return
+    args = "--import-admin"
+    if _is_config_object(osm_param):
+        for lvl in osm_param["levels"]:
+            args += " --level {}".format(lvl)
+        args += _get_cli_param(osm_param.get("nb_shards"), "--nb-admin-shards")
+        args += _get_cli_param(osm_param.get("nb_replicas"), "--nb-admin-replicas")
 
+    run_rust_binary(
+        ctx,
+        "mimir",
+        "osm2mimir",
+        files,
+        "--input {ctx.osm.file} \
+        --connection-string {ctx.es} \
+        --dataset {ctx.dataset}\
+        {args} \
+        ".format(
+            ctx=ctx, args=args
+        ),
+    )
+
+
+@task()
+def load_osm_pois(ctx, files=[]):
+    logging.info("importing poi from osm")
     poi_conf = ctx.get("poi", {}).get("osm")
-    poi_args = ""
+    poi_args = "--import-poi"
     if poi_conf:
-        poi_args = "--import-poi"
         poi_args += _get_cli_param(poi_conf.get("nb_shards"), "--nb-poi-shards")
         poi_args += _get_cli_param(poi_conf.get("nb_replicas"), "--nb-poi-replicas")
+
+    run_rust_binary(
+        ctx,
+        "mimir",
+        "osm2mimir",
+        files,
+        "--input {ctx.osm.file} \
+        --connection-string {ctx.es} \
+        --dataset {ctx.dataset}\
+        {poi_args} \
+        ".format(
+            ctx=ctx, poi_args=poi_args
+        ),
+    )
+
+
+@task()
+def load_osm_streets(ctx, files=[]):
+    logging.info("importing data from osm")
 
     street_conf = ""
     street_conf += _get_cli_param(
@@ -160,11 +194,9 @@ def load_osm(ctx, files=[]):
         --connection-string {ctx.es} \
         --dataset {ctx.dataset}\
         --import-way \
-        {import_admin} \
-        {poi_args} \
         {street_conf} \
         ".format(
-            ctx=ctx, import_admin=admin_args, poi_args=poi_args, street_conf=street_conf
+            ctx=ctx, street_conf=street_conf
         ),
     )
 
@@ -262,6 +294,28 @@ def _is_config_object(obj):
     return obj is not None and isinstance(obj, (DataProxy, dict))
 
 
+def load_admins(ctx, files):
+    if _use_cosmogony(ctx):
+        logging.info("using cosmogony")
+        if not ctx.admin.cosmogony.get("file"):
+            generate_cosmogony(ctx, files)
+        load_cosmogony(ctx, files)
+    else:
+        load_osm_admins(ctx, files)
+
+
+def load_pois(ctx, files):
+    poi_conf = ctx.get("poi")
+    if not _is_config_object(poi_conf):
+        logging.info("no poi to import")
+        return
+
+    if "fafnir" in poi_conf:
+        load_fafnir_pois(ctx, files)
+    elif "osm" in poi_conf:
+        load_osm_pois(ctx, files)
+
+
 @task(default=True)
 def load_all(ctx, files=[]):
     """
@@ -270,17 +324,13 @@ def load_all(ctx, files=[]):
     """
     download(ctx, files)
 
-    if _use_cosmogony(ctx):
-        logging.info("using cosmogony")
-        if not ctx.admin.cosmogony.get("file"):
-            generate_cosmogony(ctx, files)
-        load_cosmogony(ctx, files)
+    load_admins(ctx, files)
 
     load_addresses(ctx, files)
 
-    load_osm(ctx, files)
+    load_osm_streets(ctx, files)
 
-    load_fafnir_pois(ctx, files)
+    load_pois(ctx, files)
 
 
 @task(iterable=["files"])
