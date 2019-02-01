@@ -27,37 +27,40 @@ def run_rust_binary(ctx, container, bin, files, params):
         )
     )
 
+
 @task()
 def download(ctx, files=[]):
-    if not ctx.get("run_on_docker_compose") \
-       and any((ctx.osm.url, ctx.addresses.bano.url, ctx.addresses.oa.download)):
-       raise Exception('Cannot download datasets when not running on docker-compose')
+    if not ctx.get("run_on_docker_compose") and any(
+        (ctx.osm.url, ctx.addresses.bano.url, ctx.addresses.oa.download)
+    ):
+        raise Exception("Cannot download datasets when not running on docker-compose")
 
     files_args = _build_docker_files_args(files)
 
     if ctx.osm.url:
         file_name = os.path.basename(ctx.osm.url)
-        ctx.osm.file = os.path.join('/data/osm', file_name)
+        ctx.osm.file = os.path.join("/data/osm", file_name)
         ctx.run(
-            'docker-compose {files} run --rm download'
-            ' download-osm --osm-url={osm_url} --output-file={output_file}'.format(
+            "docker-compose {files} run --rm download"
+            " download-osm --osm-url={osm_url} --output-file={output_file}".format(
                 files=files_args, osm_url=ctx.osm.url, output_file=ctx.osm.file
             )
         )
     if ctx.addresses.bano.url:
         ctx.addresses.bano.file = "/data/addresses/bano.csv"
         ctx.run(
-            'docker-compose {files} run --rm download'
-            ' download-bano --bano-url={bano_url} --output-file={output_file}'.format(
-                files=files_args, bano_url=ctx.addresses.bano.url,
-                output_file=ctx.addresses.bano.file
+            "docker-compose {files} run --rm download"
+            " download-bano --bano-url={bano_url} --output-file={output_file}".format(
+                files=files_args,
+                bano_url=ctx.addresses.bano.url,
+                output_file=ctx.addresses.bano.file,
             )
         )
     if ctx.addresses.oa.download:
         ctx.addresses.oa.file = "/data/addresses/oa"
         ctx.run(
-            'docker-compose {files} run --rm download'
-            ' download-oa --oa-files={oa_files}'.format(
+            "docker-compose {files} run --rm download"
+            " download-oa --oa-files={oa_files}".format(
                 files=files_args, oa_files=",".join(ctx.addresses.oa.download)
             )
         )
@@ -119,28 +122,68 @@ def _get_cli_param(conf_value, cli_param_name):
 
 
 @task()
-def load_osm(ctx, files=[]):
-    logging.info("importing data from osm")
-    admin_args = ""
-    if not _use_cosmogony(ctx):
-        osm_args = ctx.admin.get("osm")
-        if _is_config_object(osm_args):
-            admin_args = "--import-admin"
-            for lvl in osm_args["levels"]:
-                admin_args += " --level {}".format(lvl)
-            admin_args += _get_cli_param(osm_args.get("nb_shards"), "--nb-admin-shards")
-            admin_args += _get_cli_param(osm_args.get("nb_replicas"), "--nb-admin-replicas")
+def load_osm_admins(ctx, files=[]):
+    logging.info("importing admins from osm")
+    osm_param = ctx.admin.get("osm")
+    if not osm_param:
+        return
+    args = "--import-admin"
+    if _is_config_object(osm_param):
+        for lvl in osm_param["levels"]:
+            args += " --level {}".format(lvl)
+        args += _get_cli_param(osm_param.get("nb_shards"), "--nb-admin-shards")
+        args += _get_cli_param(osm_param.get("nb_replicas"), "--nb-admin-replicas")
 
-    poi_conf = ctx.get("poi", {}).get('osm')
-    poi_args = ""
+    run_rust_binary(
+        ctx,
+        "mimir",
+        "osm2mimir",
+        files,
+        "--input {ctx.osm.file} \
+        --connection-string {ctx.es} \
+        --dataset {ctx.dataset}\
+        {args} \
+        ".format(
+            ctx=ctx, args=args
+        ),
+    )
+
+
+@task()
+def load_osm_pois(ctx, files=[]):
+    logging.info("importing poi from osm")
+    poi_conf = ctx.get("poi", {}).get("osm")
+    poi_args = "--import-poi"
     if poi_conf:
-        poi_args = "--import-poi"
         poi_args += _get_cli_param(poi_conf.get("nb_shards"), "--nb-poi-shards")
         poi_args += _get_cli_param(poi_conf.get("nb_replicas"), "--nb-poi-replicas")
 
+    run_rust_binary(
+        ctx,
+        "mimir",
+        "osm2mimir",
+        files,
+        "--input {ctx.osm.file} \
+        --connection-string {ctx.es} \
+        --dataset {ctx.dataset}\
+        {poi_args} \
+        ".format(
+            ctx=ctx, poi_args=poi_args
+        ),
+    )
+
+
+@task()
+def load_osm_streets(ctx, files=[]):
+    logging.info("importing data from osm")
+
     street_conf = ""
-    street_conf += _get_cli_param(ctx.get('street', {}).get("nb_shards"), "--nb-street-shards")
-    street_conf += _get_cli_param(ctx.get('street', {}).get("nb_replicas"), "--nb-street-replicas")
+    street_conf += _get_cli_param(
+        ctx.get("street", {}).get("nb_shards"), "--nb-street-shards"
+    )
+    street_conf += _get_cli_param(
+        ctx.get("street", {}).get("nb_replicas"), "--nb-street-replicas"
+    )
 
     run_rust_binary(
         ctx,
@@ -151,11 +194,9 @@ def load_osm(ctx, files=[]):
         --connection-string {ctx.es} \
         --dataset {ctx.dataset}\
         --import-way \
-        {import_admin} \
-        {poi_args} \
         {street_conf} \
         ".format(
-            ctx=ctx, import_admin=admin_args, poi_args=poi_args, street_conf=street_conf
+            ctx=ctx, street_conf=street_conf
         ),
     )
 
@@ -167,7 +208,7 @@ def load_addresses(ctx, files=[]):
         logging.info("no addresses to import")
         return
 
-    if addr_config.get('bano', {}).get('file'):
+    if addr_config.get("bano", {}).get("file"):
         logging.info("importing bano addresses")
         conf = ctx.addresses.bano
         additional_params = _get_cli_param(conf.get("nb_threads"), "--nb-threads")
@@ -185,7 +226,7 @@ def load_addresses(ctx, files=[]):
                 ctx=ctx, additional_params=additional_params
             ),
         )
-    if addr_config.get('oa', {}).get('file'):
+    if addr_config.get("oa", {}).get("file"):
         logging.info("importing oa addresses")
         conf = ctx.addresses.oa
         additional_params = _get_cli_param(conf.get("nb_threads"), "--nb-threads")
@@ -223,7 +264,9 @@ def load_fafnir_pois(ctx, files=[]):
         logging.warn("for the moment we can't load data in postgres for fafnir")
 
     additional_params = _get_cli_param(fafnir_conf.get("nb_threads"), "--nb-threads")
-    additional_params += _get_cli_param(fafnir_conf.get("bounding-box"), "--bounding-box")
+    additional_params += _get_cli_param(
+        fafnir_conf.get("bounding-box"), "--bounding-box"
+    )
     additional_params += _get_cli_param(fafnir_conf.get("nb_shards"), "--nb-shards")
     additional_params += _get_cli_param(fafnir_conf.get("nb_replicas"), "--nb-replicas")
 
@@ -251,6 +294,28 @@ def _is_config_object(obj):
     return obj is not None and isinstance(obj, (DataProxy, dict))
 
 
+def load_admins(ctx, files):
+    if _use_cosmogony(ctx):
+        logging.info("using cosmogony")
+        if not ctx.admin.cosmogony.get("file"):
+            generate_cosmogony(ctx, files)
+        load_cosmogony(ctx, files)
+    else:
+        load_osm_admins(ctx, files)
+
+
+def load_pois(ctx, files):
+    poi_conf = ctx.get("poi")
+    if not _is_config_object(poi_conf):
+        logging.info("no poi to import")
+        return
+
+    if "fafnir" in poi_conf:
+        load_fafnir_pois(ctx, files)
+    elif "osm" in poi_conf:
+        load_osm_pois(ctx, files)
+
+
 @task(default=True)
 def load_all(ctx, files=[]):
     """
@@ -259,17 +324,13 @@ def load_all(ctx, files=[]):
     """
     download(ctx, files)
 
-    if _use_cosmogony(ctx):
-        logging.info("using cosmogony")
-        if not ctx.admin.cosmogony.get("file"):
-            generate_cosmogony(ctx, files)
-        load_cosmogony(ctx, files)
+    load_admins(ctx, files)
 
     load_addresses(ctx, files)
 
-    load_osm(ctx, files)
+    load_osm_streets(ctx, files)
 
-    load_fafnir_pois(ctx, files)
+    load_pois(ctx, files)
 
 
 @task(iterable=["files"])
@@ -316,12 +377,16 @@ def test(ctx, files=None):
     ctx.run("docker-compose -f tester_docker-compose.yml build")
     files_args = _build_docker_files_args(["tester_docker-compose.yml"] + files)
 
-    region = ctx.get('geocoder_tester_region')
+    region = ctx.get("geocoder_tester_region")
     if region:
         additional_args = "run-all --regions {}".format(region)
     else:
         additional_args = ""
-    ctx.run("docker-compose {files} run --rm geocoder-tester-runner {args}".format(files=files_args, args=additional_args))
+    ctx.run(
+        "docker-compose {files} run --rm geocoder-tester-runner {args}".format(
+            files=files_args, args=additional_args
+        )
+    )
 
 
 @retry(stop_max_delay=60000, wait_fixed=100)
