@@ -100,17 +100,27 @@ def load_cosmogony(ctx, files=[]):
     conf = ctx.admin.cosmogony
     additional_params = _get_cli_param(conf.get("nb_shards"), "--nb-shards")
     additional_params += _get_cli_param(conf.get("nb_replicas"), "--nb-replicas")
+
+    langs_params = ""
+    if ctx.admin.cosmogony.langs:
+        langs_codes = ctx.admin.cosmogony.langs.split(',')
+        for code in langs_codes:
+            langs_params += _get_cli_param(code, "--lang")
+
     run_rust_binary(
         ctx,
         "mimir",
         "cosmogony2mimir",
         files,
         "--input {ctx.admin.cosmogony.file} \
+        {langs_params} \
         --connection-string {ctx.es} \
         --dataset {ctx.dataset} \
         {additional_params} \
         ".format(
-            ctx=ctx, additional_params=additional_params
+            ctx=ctx,
+            langs_params=langs_params,
+            additional_params=additional_params
         ),
     )
 
