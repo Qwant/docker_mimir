@@ -15,7 +15,7 @@ osm: # A file or a url MUST be defined
 #     ## use 'file' to give the path to an already generated cosmogony file
 #     file:
 #     ## or use the variables below to generate a cosmogony file on the fly
-#     ## output directory where to write the cosmogony.json
+#     ## output directory where to write the cosmogony.jsonl.gz
 #     output_dir:
 #     ## optional parameter (only if run without docker) cosmogony source directory (to find libpostal)
 #     directory:
@@ -43,6 +43,7 @@ osm: # A file or a url MUST be defined
 #     bounding-box:
 #     nb_shards:  # control the number of shards of the ES index
 #     nb_replicas:  # control the number of replicas of the ES index
+#     langs: # languages to import i18n names and labels (codes separated by ,)
 #   ## If present will use osm2mimir to import the poi
 #   osm:
 #     nb_shards:  # control the number of shards of the ES index
