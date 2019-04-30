@@ -78,16 +78,16 @@ def generate_cosmogony(ctx, files=[]):
         cosmogony_dir = "."
 
     with ctx.cd(cosmogony_dir):
-        cosmogony_file = "{ctx.admin.cosmogony.output_dir}/cosmogony.json".format(
+        cosmogony_file = "{ctx.admin.cosmogony.output_dir}/cosmogony.jsonl.gz".format(
             ctx=ctx
         )
         run_rust_binary(
             ctx,
-            "",
             "cosmogony",
+            "",
             files,
             "--input {ctx.osm.file} \
-        --output {cosmogony_file}".format(
+            --output {cosmogony_file}".format(
                 ctx=ctx, cosmogony_file=cosmogony_file
             ),
         )
@@ -267,11 +267,14 @@ def load_fafnir_pois(ctx, files=[]):
     fafnir_conf = poi_conf.get("fafnir")
     if not _is_config_object(fafnir_conf):
         return
+
     logging.info("fafnir {}".format(fafnir_conf))
 
-    if fafnir_conf.get("load_db") is True:
-        # TODO import data in PG
-        logging.warn("for the moment we can't load data in postgres for fafnir")
+    langs_params = ""
+    if fafnir_conf.get('langs', ''):
+        langs_codes = fafnir_conf.get('langs').split(',')
+        for code in langs_codes:
+            langs_params += _get_cli_param(code, "--lang")
 
     additional_params = _get_cli_param(fafnir_conf.get("nb_threads"), "--nb-threads")
     additional_params += _get_cli_param(
@@ -287,11 +290,14 @@ def load_fafnir_pois(ctx, files=[]):
         "fafnir",
         files,
         "--es {ctx.es} \
+        {langs_params} \
         {additional_params} \
         --dataset {ctx.dataset}\
         --pg {pg}".format(
-            ctx=ctx, pg=fafnir_conf["pg"], additional_params=additional_params
-        ),
+            ctx=ctx, pg=fafnir_conf["pg"],
+            langs_params=langs_params,
+            additional_params=additional_params
+        )
     )
 
 
