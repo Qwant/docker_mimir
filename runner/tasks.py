@@ -134,6 +134,7 @@ def run_pytest(ctx, url, name, region, category):
     additional_args = " ".join(ctx.get("additional_pytest_args", []))
     test_name = f"{region}_{category_name}"
     report_file = os.path.join(ctx.output_dir, f"{test_name}_report.txt")
+    xml_report_file = os.path.join(ctx.output_dir, f"{test_name}_report.xml")
     py_test = " ".join(
         [
             f"pytest {directory}",
@@ -142,6 +143,7 @@ def run_pytest(ctx, url, name, region, category):
             "--loose-compare",
             f"--save-report={report_file}",
             f"--tb=short {additional_args}",
+            f"--junitxml={xml_report_file}"
         ]
     )
 
