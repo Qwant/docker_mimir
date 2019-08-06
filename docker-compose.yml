@@ -4,16 +4,16 @@ services:
   download:
     build: ./download
     volumes:
-      - ${OSM_DIR:-osm}:/data/osm
-      - ${ADDR_DIR:-addr}:/data/addresses
-      - ${COSMOGONY_DIR:-cosmogony}:/data/cosmogony
+      - ${OSM_DIR:-./osm}:/data/osm
+      - ${ADDR_DIR:-./addr}:/data/addresses
+      - ${COSMOGONY_DIR:-./cosmogony}:/data/cosmogony
 
   mimir:
     image: navitia/mimirsbrunn
     volumes:
-      - ${OSM_DIR:-osm}:/data/osm
-      - ${ADDR_DIR:-addr}:/data/addresses
-      - ${COSMOGONY_DIR:-cosmogony}:/data/cosmogony
+      - ${OSM_DIR:-./osm}:/data/osm
+      - ${ADDR_DIR:-./addr}:/data/addresses
+      - ${COSMOGONY_DIR:-./cosmogony}:/data/cosmogony
     environment:
       - RUST_LOG=info,hyper=warn,rs_es=warn
 
@@ -32,8 +32,8 @@ services:
   cosmogony:
     image: osmwithoutborders/cosmogony
     volumes:
-      - ${OSM_DIR:-osm}:/data/osm
-      - ${COSMOGONY_DIR:-cosmogony}:/data/cosmogony
+      - ${OSM_DIR:-./osm}:/data/osm
+      - ${COSMOGONY_DIR:-./cosmogony}:/data/cosmogony
 
   fafnir:
     image: qwantresearch/fafnir
