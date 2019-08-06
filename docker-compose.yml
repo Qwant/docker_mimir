@@ -10,6 +10,8 @@ services:
 
   mimir:
     image: navitia/mimirsbrunn
+    depends_on:
+      - es
     volumes:
       - ${OSM_DIR:-./osm}:/data/osm
       - ${ADDR_DIR:-./addr}:/data/addresses
@@ -24,6 +26,8 @@ services:
 
   bragi:
     image: navitia/bragi
+    depends_on:
+      - es
     environment:
       - BRAGI_ES=http://es:9200
     ports:
