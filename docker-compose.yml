@@ -9,7 +9,7 @@ services:
       - ${COSMOGONY_DIR:-cosmogony}:/data/cosmogony
 
   mimir:
-    image: navitia/mimirsbrunn
+    image: amatissart/mimirsbrunn:streets
     volumes:
       - ${OSM_DIR:-osm}:/data/osm
       - ${ADDR_DIR:-addr}:/data/addresses

@@ -202,7 +202,8 @@ def load_osm_streets(ctx, files=[]):
         files,
         "--input {ctx.osm.file} \
         --connection-string {ctx.es} \
-        --dataset {ctx.dataset}\
+        --dataset {ctx.dataset} \
+        --db-file /data/osm/osm_obj.tmp \
         --import-way \
         {street_conf} \
         ".format(
