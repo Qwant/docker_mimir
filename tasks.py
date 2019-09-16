@@ -77,6 +77,15 @@ def generate_cosmogony(ctx, files=[]):
         # for docker the rules are embeded in the docker, we don't have to move
         cosmogony_dir = "."
 
+    additional_params = ""
+    if ctx.admin.cosmogony.get('langs', ''):
+        langs_codes = ctx.admin.cosmogony.langs.split(',')
+        for code in langs_codes:
+            additional_params += _get_cli_param(code, "--filter-langs")
+
+    if ctx.admin.cosmogony.get('disable_voronoi'):
+        additional_params += " --disable-voronoi"
+
     with ctx.cd(cosmogony_dir):
         cosmogony_file = "{ctx.admin.cosmogony.output_dir}/cosmogony.jsonl.gz".format(
             ctx=ctx
@@ -87,8 +96,11 @@ def generate_cosmogony(ctx, files=[]):
             "",
             files,
             "--input {ctx.osm.file} \
+            {additional_params} \
             --output {cosmogony_file}".format(
-                ctx=ctx, cosmogony_file=cosmogony_file
+                ctx=ctx,
+                cosmogony_file=cosmogony_file,
+                additional_params=additional_params
             ),
         )
         ctx.admin.cosmogony.file = cosmogony_file
@@ -195,6 +207,10 @@ def load_osm_streets(ctx, files=[]):
         ctx.get("street", {}).get("nb_replicas"), "--nb-street-replicas"
     )
 
+    street_conf += _get_cli_param(
+        ctx.get('street', {}).get('osm_db_file'), "--db-file"
+    )
+
     run_rust_binary(
         ctx,
         "mimir",
@@ -202,7 +218,7 @@ def load_osm_streets(ctx, files=[]):
         files,
         "--input {ctx.osm.file} \
         --connection-string {ctx.es} \
-        --dataset {ctx.dataset}\
+        --dataset {ctx.dataset} \
         --import-way \
         {street_conf} \
         ".format(

@@ -38,8 +38,7 @@ services:
   fafnir:
     image: qwantresearch/fafnir
     environment:
-      - RUST_LOG=info,hyper=warn,rs_es=warn
-
+      - RUST_LOG=warn,fafnir=info,mimir=info
 
 volumes:
   osm:
