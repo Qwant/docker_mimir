@@ -2,12 +2,18 @@
 
 es: http://es:9200
 
+run_on_docker_compose: true
+
 osm:
   url: https://download.geofabrik.de/europe/luxembourg-latest.osm.pbf
 
 admin:
   cosmogony:
     output_dir: /data/cosmogony
+    langs: "fr,en,de"
+
+street:
+  osm_db_file: /data/osm/osm_db.tmp
 
 addresses:
   oa:

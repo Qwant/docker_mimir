@@ -22,6 +22,7 @@ osm: # A file or a url MUST be defined
 #     nb_shards:  # control the number of shards of the ES index
 #     nb_replicas:  # control the number of replicas of the ES index
 #     langs: # languages to import i18n names and labels (codes separated by ,)
+#     disable_voronoi:  # set to truthy value to disable voronoi geometries generation
 #   ## If present will use the admins from osm
 #   osm:
 #     levels:
@@ -69,6 +70,7 @@ addresses:
 # street:
 #   nb_shards:  # control the number of shards of the ES index
 #   nb_replicas:  # control the number of replicas of the ES index
+#   osm_db_file:  # temporary file to write osm db and reduce memory usage  (optional)
 
 ## name of the geocoder region to run. default is france
 # geocoder_tester_region: luxembourg
