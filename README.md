@@ -33,12 +33,15 @@ pipenv run inv -f docker_settings.yaml load-in-docker-and-test
 #### About Tests
 
 - If you don't want to run the tests you can also use `invoke` chaining calls:
+
 ```
 pipenv run inv -f docker_settings.yaml compose-up load-all compose-down
 ```
+
 - Some other `docker-compose` files can also be given (this will use [the docker compose override mechanism](https://docs.docker.com/compose/extends/#different-environments)). It will for example make it possible to use customly build image to run tests on a given Mimir (or [Fafnir](https://github.com/QwantResearch/fafnir), [Cosmogony](https://github.com/osm-without-borders/cosmogony), ...) branch.
 
 - The file paths are given with the `--files` arguments, as follows:
+
 ```
 pipenv run inv -f docker_settings.yaml load-in-docker-and-test --files my-docker-compose.yml --files my-other-compose.yml
 ```

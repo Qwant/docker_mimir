@@ -66,6 +66,7 @@ addresses:
     nb_threads: # number of threads to use
 #   nb_shards:  # control the number of shards of the ES index
 #   nb_replicas:  # control the number of replicas of the ES index
+  osm: true
 
 # street:
 #   nb_shards:  # control the number of shards of the ES index

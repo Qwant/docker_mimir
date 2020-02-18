@@ -215,47 +215,48 @@ def load_osm_streets(ctx, files=[]):
 
 @task()
 def load_addresses(ctx, files=[]):
-    addr_config = ctx.get("addresses")
-    if not _is_config_object(addr_config):
+    if not _is_config_object(ctx.get("addresses")):
         logging.info("no addresses to import")
         return
 
-    if addr_config.get("bano", {}).get("file"):
-        logging.info("importing bano addresses")
-        conf = ctx.addresses.bano
-        additional_params = _get_cli_param(conf.get("nb_threads"), "--nb-threads")
-        additional_params += _get_cli_param(conf.get("nb_shards"), "--nb-shards")
-        additional_params += _get_cli_param(conf.get("nb_replicas"), "--nb-replicas")
-        run_rust_binary(
-            ctx,
-            "mimir",
-            "bano2mimir",
-            files,
-            "--input {ctx.addresses.bano.file} \
-            --connection-string {ctx.es} \
-            {additional_params} \
-            --dataset {ctx.dataset}".format(
-                ctx=ctx, additional_params=additional_params
-            ),
-        )
-    if addr_config.get("oa", {}).get("path"):
-        logging.info("importing oa addresses")
-        conf = ctx.addresses.oa
-        additional_params = _get_cli_param(conf.get("nb_threads"), "--nb-threads")
-        additional_params += _get_cli_param(conf.get("nb_shards"), "--nb-shards")
-        additional_params += _get_cli_param(conf.get("nb_replicas"), "--nb-replicas")
-        run_rust_binary(
-            ctx,
-            "mimir",
-            "openaddresses2mimir",
-            files,
-            "--input {ctx.addresses.oa.path} \
-            --connection-string {ctx.es} \
-            {additional_params} \
-            --dataset {ctx.dataset}".format(
-                ctx=ctx, additional_params=additional_params
-            ),
-        )
+    output_csv = "output.csv.gz"
+
+    options = []
+    if ctx.addresses.get("bano", {}).get("file"):
+        options.append("--bano")
+        options.append(ctx.addresses.bano.file)
+    if ctx.addresses.get("oa", {}).get("file"):
+        options.append("--openaddresses")
+        options.append(ctx.addresses.oa.file)
+    if ctx.addresses.get("osm", False) is True and ctx.get("osm", {}).get("file"):
+        options.append("--osm")
+        options.append(ctx.osm.file)
+    if len(options) == 0:
+        return
+    options.append("--output_compressed_csv")
+    options.append(f"/addr/{output_csv}")
+
+    logging.info("Running addresses importer/deduplicator")
+
+    run_rust_binary(ctx, "addresses-importer", "deduplicator", options)
+
+    logging.info("Import addresses into ES instance")
+
+    additional_params = _get_cli_param(conf.get("nb_threads"), "--nb-threads")
+    additional_params += _get_cli_param(conf.get("nb_shards"), "--nb-shards")
+    additional_params += _get_cli_param(conf.get("nb_replicas"), "--nb-replicas")
+    run_rust_binary(
+        ctx,
+        "mimir",
+        "openaddresses2mimir",
+        files,
+        "--input {output_csv} \
+        --connection-string {ctx.es} \
+        {additional_params} \
+        --dataset {ctx.dataset}".format(
+            ctx=ctx, additional_params=additional_params
+        ),
+    )
 
 
 @task()

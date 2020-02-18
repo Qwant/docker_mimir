@@ -3,7 +3,7 @@
 es: http://es:9200
 
 osm:
-  url: https://download.geofabrik.de/europe/luxembourg-latest.osm.pbf
+  url: https://download.geofabrik.de/europe/belgium-latest.osm.pbf
 
 admin:
   cosmogony:
