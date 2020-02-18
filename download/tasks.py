@@ -1,6 +1,7 @@
-import glob
-from os import path
+import fnmatch
+import re
 import tempfile
+from os import path, walk
 
 from invoke import task
 
@@ -20,25 +21,36 @@ def download_bano(ctx, bano_url, output_file):
 
 
 @task
-def download_oa(ctx, oa_files):
-    temp_dir = tempfile.mkdtemp()
+def download_oa(ctx, oa_filter):
+    tmp_dir = tempfile.mkdtemp()
 
-    oa_files = oa_files.split(",")
-    oa_temp_dir = path.join(temp_dir, "oa")
+    tmp_file = path.join(tmp_dir, "oa.zip")
+    ctx.run(f"mkdir -p {path.dirname(tmp_file)}")
+    ctx.run(f"wget --progress=dot:giga {ctx.oa_url} -O {tmp_file}")
 
-    for oa_filename in oa_files:
-        source_url = f"{ctx.oa_base_url}{oa_filename}.zip"
-        tmp_file = path.join(temp_dir, f"{oa_filename}.zip")
-        ctx.run(f"mkdir -p {path.dirname(tmp_file)}")
-        ctx.run(f"wget --progress=dot:giga {source_url} -O {tmp_file}")
-        ctx.run(f"unzip -o -qq -d {oa_temp_dir} {tmp_file}")
-        ctx.run(f"rm {tmp_file}")
+    oa_tmp_dir = path.join(tmp_dir, "oa")
+    ctx.run(f"unzip -o -qq -d {oa_tmp_dir} {tmp_file}")
+    ctx.run(f"rm {tmp_file}")
 
+    # Collect the list of files to include in the output
+    keep_patterns = (fnmatch.translate(pat) for pat in oa_filter.split(","))
+    pattern = re.compile("|".join(keep_patterns))
+    included_files = []
+
+    for dirname, _, files in walk(oa_tmp_dir):
+        for filename in files:
+            full_path = path.join(dirname, filename)
+            relt_path = full_path.lstrip(oa_tmp_dir)
+
+            if pattern.match(relt_path):
+                included_files.append(full_path)
+
+    # Flatten all .csv to the root of a single director
     output_dir = path.join(ctx.data_dir, "addresses", "oa")
-    ctx.run(f"rm -rf {output_dir}")
     ctx.run(f"mkdir -p {output_dir}")
+    ctx.run(f"rm -rf {output_dir}/*")
 
-    # Flatten all .csv to the root of a single directory
-    for csv_file in glob.glob(f"{oa_temp_dir}/**/*.csv", recursive=True):
-        flat_csv_filename = csv_file.lstrip(oa_temp_dir).replace("/", "__")
-        ctx.run(f"mv {csv_file} {output_dir}/{flat_csv_filename}")
+    for filename in included_files:
+        flat_name = filename.lstrip(oa_tmp_dir).replace("/", "__")
+        print(f"{flat_name:>40} ...", flush=True)
+        ctx.run(f"mv {filename} {output_dir}/{flat_name}")

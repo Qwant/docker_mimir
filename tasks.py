@@ -54,8 +54,8 @@ def download(ctx, files=[]):
         ctx.addresses.oa.file = "/data/addresses/oa"
         ctx.run(
             "docker-compose {files} run --rm download"
-            " download-oa --oa-files={oa_files}".format(
-                files=files_args, oa_files=",".join(ctx.addresses.oa.download)
+            " download-oa --oa-filter={oa_filter}".format(
+                files=files_args, oa_filter=",".join(ctx.addresses.oa.download)
             )
         )
 

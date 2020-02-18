@@ -1,3 +1,4 @@
 data_dir: /data
 
-oa_base_url: https://results.openaddresses.io/latest/run/
+# URL for the zip archive containing all data
+oa_url: https://data.openaddresses.io/openaddr-collected-europe.zip
