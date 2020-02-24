@@ -40,7 +40,7 @@ def download_oa(ctx, oa_filter):
     for dirname, _, files in walk(oa_tmp_dir):
         for filename in files:
             full_path = path.join(dirname, filename)
-            relt_path = full_path.lstrip(oa_tmp_dir)
+            relt_path = path.relpath(full_path, oa_tmp_dir)
 
             if pattern.match(relt_path):
                 included_files.append(full_path)
@@ -51,6 +51,6 @@ def download_oa(ctx, oa_filter):
     ctx.run(f"rm -rf {output_dir}/*")
 
     for filename in included_files:
-        flat_name = filename.lstrip(oa_tmp_dir).replace("/", "__")
+        flat_name = path.relpath(filename, oa_tmp_dir).replace("/", "__")
         print(f"{flat_name:>40} ...", flush=True)
         ctx.run(f"mv {filename} {output_dir}/{flat_name}")
