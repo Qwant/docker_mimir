@@ -50,6 +50,8 @@ osm: # A file or a url MUST be defined
 #     nb_shards:  # control the number of shards of the ES index
 #     nb_replicas:  # control the number of replicas of the ES index
 
+new-importer: false
+
 addresses:
   oa:
     file: # Path to .csv, or a directory with multiple .csv (ignored if 'download' is defined)
@@ -66,7 +68,10 @@ addresses:
     nb_threads: # number of threads to use
 #   nb_shards:  # control the number of shards of the ES index
 #   nb_replicas:  # control the number of replicas of the ES index
-  osm: true
+
+  osm:
+    file: # PATH to the pbf file, ignored is url is defined
+    url:  # geofabrik
 
 # street:
 #   nb_shards:  # control the number of shards of the ES index

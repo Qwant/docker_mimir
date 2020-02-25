@@ -219,6 +219,48 @@ def load_addresses(ctx, files=[]):
         logging.info("no addresses to import")
         return
 
+    if ctx.get("new-importer", False) is False:
+        addr_config = ctx.get("addresses")
+        if addr_config.get("bano", {}).get("file"):
+            logging.info("importing bano addresses")
+            conf = ctx.addresses.bano
+
+            additional_params = _get_cli_param(conf.get("nb_threads"), "--nb-threads")
+            additional_params += _get_cli_param(conf.get("nb_shards"), "--nb-shards")
+            additional_params += _get_cli_param(conf.get("nb_replicas"), "--nb-replicas")
+            run_rust_binary(
+                ctx,
+                "mimir",
+                "bano2mimir",
+                files,
+                "--input {ctx.addresses.bano.file} \
+                --connection-string {ctx.es} \
+                {additional_params} \
+                --dataset {ctx.dataset}".format(
+                    ctx=ctx, additional_params=additional_params
+                ),
+            )
+        if addr_config.get("oa", {}).get("file"):
+            logging.info("importing oa addresses")
+            conf = ctx.addresses.oa
+            additional_params = _get_cli_param(conf.get("nb_threads"), "--nb-threads")
+            additional_params += _get_cli_param(conf.get("nb_shards"), "--nb-shards")
+            additional_params += _get_cli_param(conf.get("nb_replicas"), "--nb-replicas")
+            # TODO take multiples oa files ?
+             run_rust_binary(
+                ctx,
+                "mimir",
+                "openaddresses2mimir",
+                files,
+                "--input {ctx.addresses.oa.file} \
+                --connection-string {ctx.es} \
+                {additional_params} \
+                --dataset {ctx.dataset}".format(
+                    ctx=ctx, additional_params=additional_params
+                ),
+            )
+        return
+
     output_csv = "output.csv.gz"
 
     options = []
@@ -228,9 +270,9 @@ def load_addresses(ctx, files=[]):
     if ctx.addresses.get("oa", {}).get("file"):
         options.append("--openaddresses")
         options.append(ctx.addresses.oa.file)
-    if ctx.addresses.get("osm", False) is True and ctx.get("osm", {}).get("file"):
+    if ctx.addresses.get("osm", {}).get("file"):
         options.append("--osm")
-        options.append(ctx.osm.file)
+        options.append(ctx.addresses.osm.file)
     if len(options) == 0:
         return
     options.append("--output_compressed_csv")
@@ -242,9 +284,6 @@ def load_addresses(ctx, files=[]):
 
     logging.info("Import addresses into ES instance")
 
-    additional_params = _get_cli_param(conf.get("nb_threads"), "--nb-threads")
-    additional_params += _get_cli_param(conf.get("nb_shards"), "--nb-shards")
-    additional_params += _get_cli_param(conf.get("nb_replicas"), "--nb-replicas")
     run_rust_binary(
         ctx,
         "mimir",
