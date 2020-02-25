@@ -2,8 +2,6 @@
 
 es: http://es:9200
 
-run_on_docker_compose: true
-
 osm:
   url: https://download.geofabrik.de/europe/luxembourg-latest.osm.pbf
 

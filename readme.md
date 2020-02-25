@@ -9,32 +9,21 @@
 
 ## How to use it
 
-Two methods are possible to use `docker_mimir`: either in a 'bare metal' mode or with `docker_compose`.
+To configure the required data directories, some environment variable can be set (in cli or in a `.env` file in the directory). The env variables that can be set as follows:
 
-#### Bare Metal Mode
-
-- To run it with a custom configuration file:
-```shell
-pipenv run inv -f my_settings.yaml
-```
-- All binaries executed need to be in the PATH. The easiest way to achieve this is to export the path before:
-```shell
-PATH=$PATH:<path_to_cosmogony>/target/release:<path_to_mimir>/target/release:<path_to_fafnir>/target/release pipenv run inv
-```
-
-#### With `docker-compose`
-
-- To configure the required data directories, some environment variable can be set (in cli or in a `.env` file in the directory). The env variables that can be set as follows:
 ```env
 OSM_DIR=<path to osm data dir>
 ADDR_DIR=<path to addresses data dir>
 COSMOGONY_DIR=<path to cosmogony data dir>
 ```
+
 - Note that you don't need to set the variable that are not used in the configuration file.
 - Once the variables are set, to run mimir you need to do:
+
 ```shell
 pipenv run inv -f docker_settings.yaml load-in-docker-and-test
 ```
+
 - The file `docker_settings.yaml` contains an example configuration to download and import data about Luxembourg.
 - This will:
   * run a `docker-compose up`.

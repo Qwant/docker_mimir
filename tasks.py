@@ -11,11 +11,10 @@ logging.basicConfig(level=logging.INFO)
 
 def run_rust_binary(ctx, container, bin, files, params):
     cmd = "{} {}".format(bin, params)
-    if ctx.get("run_on_docker_compose"):
-        files_args = _build_docker_files_args(files)
-        cmd = "docker-compose {files} run --rm {container} {cmd}".format(
-            files=files_args, container=container, cmd=cmd
-        )
+    files_args = _build_docker_files_args(files)
+    cmd = "docker-compose {files} run --rm {container} {cmd}".format(
+        files=files_args, container=container, cmd=cmd
+    )
 
     logging.info("{sep} {msg} {sep}".format(sep="*" * 15, msg=bin))
     logging.info("running: {}".format(cmd))
@@ -30,11 +29,6 @@ def run_rust_binary(ctx, container, bin, files, params):
 
 @task()
 def download(ctx, files=[]):
-    if not ctx.get("run_on_docker_compose") and any(
-        (ctx.osm.url, ctx.addresses.bano.url, ctx.addresses.oa.download)
-    ):
-        raise Exception("Cannot download datasets when not running on docker-compose")
-
     files_args = _build_docker_files_args(files)
 
     if ctx.osm.url:
@@ -69,13 +63,6 @@ def download(ctx, files=[]):
 @task()
 def generate_cosmogony(ctx, files=[]):
     logging.info("generating cosmogony file")
-    if not ctx.get("run_on_docker_compose"):
-        # cosmogony needs to be run in the cosmogony directory to access libpostal rules
-        cosmogony_dir = ctx.admin.cosmogony.directory
-        ctx.run("mkdir -p {ctx.admin.cosmogony.output_dir}".format(ctx=ctx))
-    else:
-        # for docker the rules are embeded in the docker, we don't have to move
-        cosmogony_dir = "."
 
     additional_params = ""
     if ctx.admin.cosmogony.get('langs', ''):
@@ -86,7 +73,7 @@ def generate_cosmogony(ctx, files=[]):
     if ctx.admin.cosmogony.get('disable_voronoi'):
         additional_params += " --disable-voronoi"
 
-    with ctx.cd(cosmogony_dir):
+    with ctx.cd("."):
         cosmogony_file = "{ctx.admin.cosmogony.output_dir}/cosmogony.jsonl.gz".format(
             ctx=ctx
         )
@@ -373,7 +360,6 @@ def compose_up(ctx, files=[]):
     you can specify additional docker-compose file to the command with the --files parameters
     """
     logging.info("running in docker-compose mode")
-    ctx.run_on_docker_compose = True
     files_args = _build_docker_files_args(files)
 
     ctx.run("docker-compose {files} pull".format(files=files_args))
@@ -400,8 +386,6 @@ def test(ctx, files=None):
 
     The tests results are written in the ./result directory (defined in tester_docker-compose.yml)
     """
-    if not ctx.run_on_docker_compose:
-        raise Exception("geocoder-tester can run only in docker-compose mode")
     logging.info("running geocoder-tester")
 
     # we update the images in tester_docker-compose
