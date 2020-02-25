@@ -1,4 +1,12 @@
-data_dir: /data
+# Ignore files cache.
+force_downloads: False
 
-# URL for the zip archive containing all data
+# Directory were to keep files that need to be cached for addresses download.
+# Note that if it is not inside a volume, the cache will probably be lost at
+# each run.
+cache_dir: /tmp/cache
+
+tmp_dir: /tmp
+
+# URL for the zip archive containing all data.
 oa_url: https://data.openaddresses.io/openaddr-collected-europe.zip
