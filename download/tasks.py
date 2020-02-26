@@ -119,9 +119,9 @@ def download_bano(ctx, bano_url, output_file):
 
 
 @task
-def download_oa(ctx, oa_filter, output_dir):
+def download_oa(ctx, oa_url, oa_filter, output_dir):
     src_file = path.join(ctx.cache_dir, "oa.zip")
-    download_file(ctx, src_file, ctx.oa_url, max_age=timedelta(days=7))
+    download_file(ctx, src_file, oa_url, max_age=timedelta(days=7))
 
     oa_tmp_dir = path.join(ctx.tmp_dir, "oa")
     ctx.run(f"unzip -o -qq -d {oa_tmp_dir} {src_file}")

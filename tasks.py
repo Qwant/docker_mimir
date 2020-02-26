@@ -50,14 +50,15 @@ def download(ctx, files=[]):
                 output_file=ctx.addresses.bano.file,
             )
         )
-    if ctx.addresses.oa.download:
+    if ctx.addresses.oa.url and ctx.addresses.oa.include:
         ctx.addresses.oa.path = "/data/addresses/oa"
         ctx.run(
             "docker-compose {files} run --rm download"
-            " download-oa --output-dir={output_dir} --oa-filter={oa_filter}".format(
+            " download-oa --oa-url={oa_url} --output-dir={output_dir} --oa-filter={oa_filter}".format(
                 files=files_args,
+                oa_url=ctx.addresses.oa.url,
                 output_dir=ctx.addresses.oa.path,
-                oa_filter=",".join(ctx.addresses.oa.download),
+                oa_filter=",".join(ctx.addresses.oa.include),
             )
         )
 

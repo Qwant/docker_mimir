@@ -15,8 +15,11 @@ street:
 
 addresses:
   oa:
-    nb_threads: 4
-    download:
+    # URL for the zip archive containing all data.
+    url: https://data.openaddresses.io/openaddr-collected-europe.zip
+
+    # Patterns of file to import URLs from.
+    include:
       - lu/**.csv
       # - at/**.csv
       # - be/**.csv
