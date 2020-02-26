@@ -65,7 +65,7 @@ def _pretty_print(dicts, keys):
 RESULT_LINE_PATTERN = re.compile("===+.*===+")
 
 RESULT_PATTERN = re.compile(
-    "===+( (?P<failed>\d+) failed)?,? ((?P<success>\d+) passed)?.*in (?P<time>.*) seconds.*"
+    "===+( (?P<failed>\\d+) failed)?,? ((?P<success>\\d+) passed)?.*in (?P<time>.*) seconds.*"
 )
 
 
