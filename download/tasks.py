@@ -14,14 +14,24 @@ from invoke import task
 STATUS_FILE_NAME = "_files_status.json"
 
 
+def get_md5_from_url(url):
+    try:
+        res = requests.get(url)
+    except Exception as err:
+        print(f"failed to get hash from {url}: {err}", file=sys.stderr)
+        return None
+
+    return res.text.split()[0]
+
+
 def raw_files_status(ctx):
     files_status_path = path.join(ctx.cache_dir, STATUS_FILE_NAME)
 
     if path.isfile(files_status_path):
         with open(files_status_path) as data:
             return json.load(data)
-    else:
-        return dict()
+
+    return dict()
 
 
 def get_file_status(ctx, filename):
@@ -66,11 +76,10 @@ def needs_to_download(ctx, filename, max_age=None, md5_url=None):
         return True
 
     if md5_url is not None:
-        res = requests.get(md5_url)
-        expt_md5 = res.text.split()[0]
+        expt_md5 = get_md5_from_url(md5_url)
         curr_md5 = file_status["md5"]
 
-        if expt_md5 != curr_md5:
+        if expt_md5 is None or expt_md5 != curr_md5:
             return True
 
     if ctx.force_downloads:
@@ -81,7 +90,7 @@ def needs_to_download(ctx, filename, max_age=None, md5_url=None):
         return True
 
     print(
-        f"filename '{filename}' already exists, we don't need to download it again",
+        f"'{filename}' already exists, we don't need to download it again",
         file=sys.stderr,
     )
     return False
@@ -103,12 +112,20 @@ def download_file(ctx, filename, url, max_age=None, md5_url=None):
             md5.update(chunk)
         md5 = md5.hexdigest()
 
+    if md5_url is not None:
+        expt_md5 = get_md5_from_url(md5_url)
+
+        if md5 != expt_md5:
+            raise Exception(f"md5 at {md5_url} didn't match for {url}")
+
     save_file_status(ctx, filename, {"last_update": datetime.utcnow(), "md5": md5})
 
 
 @task
 def download_osm(ctx, osm_url, output_file):
-    download_file(ctx, output_file, osm_url, md5_url=osm_url + ".md5")
+    download_file(
+        ctx, output_file, osm_url, md5_url=osm_url + ".md5",
+    )
 
 
 @task
@@ -140,12 +157,12 @@ def download_oa(ctx, oa_url, oa_filter, output_dir):
                 included_files.append(full_path)
 
     # Flatten all .csv into output directory.
-    print("Collect OpenAddresses data")
+    print("Collect OpenAddresses data", file=sys.stderr)
 
     ctx.run(f"mkdir -p {output_dir}")
     ctx.run(f"rm -rf {output_dir}/*")
 
     for filename in included_files:
         flat_name = path.relpath(filename, oa_tmp_dir).replace("/", "__")
-        print(f" -> add {flat_name}", flush=True)
+        print(f" -> add {flat_name}", file=sys.stderr)
         ctx.run(f"mv {filename} {output_dir}/{flat_name}")

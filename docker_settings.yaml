@@ -16,7 +16,7 @@ street:
 addresses:
   oa:
     # URL for the zip archive containing all data.
-    url: https://data.openaddresses.io/openaddr-collected-europe.zip
+    url: http://castor.dupre.io/drop/oa-part-europe.zip
 
     # Patterns of file to import URLs from.
     include:
