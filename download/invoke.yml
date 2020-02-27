@@ -1,3 +1,9 @@
-data_dir: /data
+# Ignore files cache.
+force_downloads: False
 
-oa_base_url: https://results.openaddresses.io/latest/run/
+# Directory were to keep files that need to be cached for addresses download.
+# Note that if it is not inside a volume, the cache will probably be lost at
+# each run.
+cache_dir: /tmp/cache
+
+tmp_dir: /tmp

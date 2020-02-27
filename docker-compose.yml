@@ -7,6 +7,9 @@ services:
       - ${OSM_DIR:-osm}:/data/osm
       - ${ADDR_DIR:-addr}:/data/addresses
       - ${COSMOGONY_DIR:-cosmogony}:/data/cosmogony
+      - ${DOWNLOAD_CACHE_DIR:-download_cache}:/data/cache
+    environment:
+      - INVOKE_CACHE_DIR=/data/cache
 
   mimir:
     image: navitia/mimirsbrunn
@@ -44,3 +47,4 @@ volumes:
   osm:
   cosmogony:
   addr:
+  download_cache:

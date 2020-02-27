@@ -50,12 +50,15 @@ def download(ctx, files=[]):
                 output_file=ctx.addresses.bano.file,
             )
         )
-    if ctx.addresses.oa.download:
-        ctx.addresses.oa.file = "/data/addresses/oa"
+    if ctx.addresses.oa.url and ctx.addresses.oa.include:
+        ctx.addresses.oa.path = "/data/addresses/oa"
         ctx.run(
             "docker-compose {files} run --rm download"
-            " download-oa --oa-files={oa_files}".format(
-                files=files_args, oa_files=",".join(ctx.addresses.oa.download)
+            " download-oa --oa-url={oa_url} --output-dir={output_dir} --oa-filter={oa_filter}".format(
+                files=files_args,
+                oa_url=ctx.addresses.oa.url,
+                output_dir=ctx.addresses.oa.path,
+                oa_filter=",".join(ctx.addresses.oa.include),
             )
         )
 
@@ -65,12 +68,12 @@ def generate_cosmogony(ctx, files=[]):
     logging.info("generating cosmogony file")
 
     additional_params = ""
-    if ctx.admin.cosmogony.get('langs', ''):
-        langs_codes = ctx.admin.cosmogony.langs.split(',')
+    if ctx.admin.cosmogony.get("langs", ""):
+        langs_codes = ctx.admin.cosmogony.langs.split(",")
         for code in langs_codes:
             additional_params += _get_cli_param(code, "--filter-langs")
 
-    if ctx.admin.cosmogony.get('disable_voronoi'):
+    if ctx.admin.cosmogony.get("disable_voronoi"):
         additional_params += " --disable-voronoi"
 
     with ctx.cd("."):
@@ -87,7 +90,7 @@ def generate_cosmogony(ctx, files=[]):
             --output {cosmogony_file}".format(
                 ctx=ctx,
                 cosmogony_file=cosmogony_file,
-                additional_params=additional_params
+                additional_params=additional_params,
             ),
         )
         ctx.admin.cosmogony.file = cosmogony_file
@@ -101,8 +104,8 @@ def load_cosmogony(ctx, files=[]):
     additional_params += _get_cli_param(conf.get("nb_replicas"), "--nb-replicas")
 
     langs_params = ""
-    if ctx.admin.cosmogony.get('langs', ''):
-        langs_codes = ctx.admin.cosmogony.langs.split(',')
+    if ctx.admin.cosmogony.get("langs", ""):
+        langs_codes = ctx.admin.cosmogony.langs.split(",")
         for code in langs_codes:
             langs_params += _get_cli_param(code, "--lang")
 
@@ -117,9 +120,7 @@ def load_cosmogony(ctx, files=[]):
         --dataset {ctx.dataset} \
         {additional_params} \
         ".format(
-            ctx=ctx,
-            langs_params=langs_params,
-            additional_params=additional_params
+            ctx=ctx, langs_params=langs_params, additional_params=additional_params
         ),
     )
 
@@ -194,9 +195,7 @@ def load_osm_streets(ctx, files=[]):
         ctx.get("street", {}).get("nb_replicas"), "--nb-street-replicas"
     )
 
-    street_conf += _get_cli_param(
-        ctx.get('street', {}).get('osm_db_file'), "--db-file"
-    )
+    street_conf += _get_cli_param(ctx.get("street", {}).get("osm_db_file"), "--db-file")
 
     run_rust_binary(
         ctx,
@@ -239,19 +238,18 @@ def load_addresses(ctx, files=[]):
                 ctx=ctx, additional_params=additional_params
             ),
         )
-    if addr_config.get("oa", {}).get("file"):
+    if addr_config.get("oa", {}).get("path"):
         logging.info("importing oa addresses")
         conf = ctx.addresses.oa
         additional_params = _get_cli_param(conf.get("nb_threads"), "--nb-threads")
         additional_params += _get_cli_param(conf.get("nb_shards"), "--nb-shards")
         additional_params += _get_cli_param(conf.get("nb_replicas"), "--nb-replicas")
-        # TODO take multiples oa files ?
         run_rust_binary(
             ctx,
             "mimir",
             "openaddresses2mimir",
             files,
-            "--input {ctx.addresses.oa.file} \
+            "--input {ctx.addresses.oa.path} \
             --connection-string {ctx.es} \
             {additional_params} \
             --dataset {ctx.dataset}".format(
@@ -274,8 +272,8 @@ def load_fafnir_pois(ctx, files=[]):
     logging.info("fafnir {}".format(fafnir_conf))
 
     langs_params = ""
-    if fafnir_conf.get('langs', ''):
-        langs_codes = fafnir_conf.get('langs').split(',')
+    if fafnir_conf.get("langs", ""):
+        langs_codes = fafnir_conf.get("langs").split(",")
         for code in langs_codes:
             langs_params += _get_cli_param(code, "--lang")
 
@@ -297,10 +295,11 @@ def load_fafnir_pois(ctx, files=[]):
         {additional_params} \
         --dataset {ctx.dataset}\
         --pg {pg}".format(
-            ctx=ctx, pg=fafnir_conf["pg"],
+            ctx=ctx,
+            pg=fafnir_conf["pg"],
             langs_params=langs_params,
-            additional_params=additional_params
-        )
+            additional_params=additional_params,
+        ),
     )
 
 

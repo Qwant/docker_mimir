@@ -5,6 +5,7 @@ verify_ssl = true
 
 [packages]
 invoke = "*"
+requests = "*"
 
 [requires]
 python_version = "3.6"
