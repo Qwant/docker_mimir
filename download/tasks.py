@@ -17,6 +17,7 @@ STATUS_FILE_NAME = "_files_status.json"
 def get_md5_from_url(url):
     try:
         res = requests.get(url)
+        res.raise_for_status()
     except Exception as err:
         print(f"failed to get hash from {url}: {err}", file=sys.stderr)
         return None
