@@ -224,7 +224,6 @@ def load_addresses(ctx, files=[]):
         if addr_config.get("bano", {}).get("file"):
             logging.info("importing bano addresses")
             conf = ctx.addresses.bano
-
             additional_params = _get_cli_param(conf.get("nb_threads"), "--nb-threads")
             additional_params += _get_cli_param(conf.get("nb_shards"), "--nb-shards")
             additional_params += _get_cli_param(conf.get("nb_replicas"), "--nb-replicas")
@@ -240,19 +239,18 @@ def load_addresses(ctx, files=[]):
                     ctx=ctx, additional_params=additional_params
                 ),
             )
-        if addr_config.get("oa", {}).get("file"):
+        if addr_config.get("oa", {}).get("path"):
             logging.info("importing oa addresses")
             conf = ctx.addresses.oa
             additional_params = _get_cli_param(conf.get("nb_threads"), "--nb-threads")
             additional_params += _get_cli_param(conf.get("nb_shards"), "--nb-shards")
             additional_params += _get_cli_param(conf.get("nb_replicas"), "--nb-replicas")
-            # TODO take multiples oa files ?
-             run_rust_binary(
+            run_rust_binary(
                 ctx,
                 "mimir",
                 "openaddresses2mimir",
                 files,
-                "--input {ctx.addresses.oa.file} \
+                "--input {ctx.addresses.oa.path} \
                 --connection-string {ctx.es} \
                 {additional_params} \
                 --dataset {ctx.dataset}".format(
@@ -276,7 +274,7 @@ def load_addresses(ctx, files=[]):
     if len(options) == 0:
         return
     options.append("--output_compressed_csv")
-    options.append(f"/addr/{output_csv}")
+    options.append("/addr/{}".format(output_csv))
 
     logging.info("Running addresses importer/deduplicator")
 

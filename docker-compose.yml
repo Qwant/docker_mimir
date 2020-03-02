@@ -45,6 +45,9 @@ services:
 
   addresses-importer:
     image: qwantresearch/addresses-importer
+    volumes:
+      - ${OSM_DIR:-osm}:/data/osm
+      - ${ADDR_DIR:-addr}:/data/addresses
 
 volumes:
   osm:
