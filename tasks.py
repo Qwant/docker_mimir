@@ -31,7 +31,7 @@ def run_rust_binary(ctx, container, bin, files, params):
 def download(ctx, files=[]):
     files_args = _build_docker_files_args(files)
 
-    if ctx.osm.url:
+    if ctx.get("osm", {}).get("url"):
         file_name = os.path.basename(ctx.osm.url)
         ctx.osm.file = os.path.join("/data/osm", file_name)
         ctx.run(
@@ -40,7 +40,7 @@ def download(ctx, files=[]):
                 files=files_args, osm_url=ctx.osm.url, output_file=ctx.osm.file
             )
         )
-    if ctx.addresses.bano.url:
+    if ctx.addresses.get("bano", {}).get("url"):
         ctx.addresses.bano.file = "/data/addresses/bano.csv"
         ctx.run(
             "docker-compose {files} run --rm download"
@@ -50,7 +50,7 @@ def download(ctx, files=[]):
                 output_file=ctx.addresses.bano.file,
             )
         )
-    if ctx.addresses.oa.url and ctx.addresses.oa.include:
+    if ctx.addresses.get("oa", {}).get("url") and ctx.addresses.get("oa", {}).get("include"):
         ctx.addresses.oa.path = "/data/addresses/oa"
         ctx.run(
             "docker-compose {files} run --rm download"
@@ -268,9 +268,9 @@ def load_addresses(ctx, files=[]):
     if ctx.addresses.get("oa", {}).get("file"):
         options.append("--openaddresses")
         options.append(ctx.addresses.oa.file)
-    if ctx.addresses.get("osm", {}).get("file"):
+    if ctx.get("osm", {}).get("file"):
         options.append("--osm")
-        options.append(ctx.addresses.osm.file)
+        options.append(ctx.osm.file)
     if len(options) == 0:
         return
     options.append("--output_compressed_csv")
