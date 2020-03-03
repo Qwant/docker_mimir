@@ -219,7 +219,7 @@ def load_addresses(ctx, files=[]):
         logging.info("no addresses to import")
         return
 
-    if ctx.get("new-importer", False) is False:
+    if not ctx.get("new-importer", False):
         addr_config = ctx.get("addresses")
         if addr_config.get("bano", {}).get("file"):
             logging.info("importing bano addresses")
