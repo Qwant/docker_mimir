@@ -273,12 +273,12 @@ def load_addresses(ctx, files=[]):
         options.append(ctx.osm.file)
     if len(options) == 0:
         return
-    options.append("--output_compressed_csv")
-    options.append("/addr/{}".format(output_csv))
+    options.append("--output-compressed-csv")
+    options.append("/data/{}".format(output_csv))
 
     logging.info("Running addresses importer/deduplicator")
 
-    run_rust_binary(ctx, "addresses-importer", "deduplicator", options)
+    run_rust_binary(ctx, "addresses-importer", "", files, ' '.join(options))
 
     logging.info("Import addresses into ES instance")
 
@@ -287,11 +287,11 @@ def load_addresses(ctx, files=[]):
         "mimir",
         "openaddresses2mimir",
         files,
-        "--input {output_csv} \
+        "--input /data/{output_csv} \
         --connection-string {ctx.es} \
-        {additional_params} \
         --dataset {ctx.dataset}".format(
-            ctx=ctx, additional_params=additional_params
+            ctx=ctx,
+            output_csv=output_csv
         ),
     )
 
