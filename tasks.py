@@ -219,7 +219,7 @@ def load_addresses(ctx, files=[]):
         logging.info("no addresses to import")
         return
 
-    if not ctx.get("new-importer", False):
+    if not ctx.addresses.get("use_deduplicator", False):
         addr_config = ctx.get("addresses")
         if addr_config.get("bano", {}).get("file"):
             logging.info("importing bano addresses")
@@ -262,12 +262,17 @@ def load_addresses(ctx, files=[]):
     output_csv = "output.csv.gz"
 
     options = []
+    additional_params = ''
     if ctx.addresses.get("bano", {}).get("file"):
         options.append("--bano")
         options.append(ctx.addresses.bano.file)
     if ctx.addresses.get("oa", {}).get("file"):
         options.append("--openaddresses")
         options.append(ctx.addresses.oa.file)
+        conf = ctx.addresses.oa
+        additional_params = _get_cli_param(conf.get("nb_threads"), "--nb-threads")
+        additional_params += _get_cli_param(conf.get("nb_shards"), "--nb-shards")
+        additional_params += _get_cli_param(conf.get("nb_replicas"), "--nb-replicas")
     if ctx.get("osm", {}).get("file"):
         options.append("--osm")
         options.append(ctx.osm.file)
@@ -289,9 +294,11 @@ def load_addresses(ctx, files=[]):
         files,
         "--input /data/{output_csv} \
         --connection-string {ctx.es} \
+        {additional_params} \
         --dataset {ctx.dataset}".format(
+            output_csv=output_csv,
             ctx=ctx,
-            output_csv=output_csv
+            additional_params=additional_params
         ),
     )
 

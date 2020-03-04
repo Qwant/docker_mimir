@@ -50,9 +50,9 @@ osm: # A file or a url MUST be defined
 #     nb_shards:  # control the number of shards of the ES index
 #     nb_replicas:  # control the number of replicas of the ES index
 
-new-importer: false
-
 addresses:
+  use_deduplicator: false
+
   oa:
     file: # Path to .csv, or a directory with multiple .csv (ignored if 'download' is defined)
     download: # List of openaddresses datasets to download

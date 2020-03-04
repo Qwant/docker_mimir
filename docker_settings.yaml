@@ -14,6 +14,8 @@ street:
   osm_db_file: /data/osm/osm_db.tmp
 
 addresses:
+  use_deduplicator: false
+
   oa:
     # URL for the zip archive containing all data.
     url: https://data.openaddresses.io/openaddr-collected-europe.zip
