@@ -179,6 +179,7 @@ def load_osm_pois(ctx, files=[]):
     if poi_conf:
         poi_args += _get_cli_param(poi_conf.get("nb_shards"), "--nb-poi-shards")
         poi_args += _get_cli_param(poi_conf.get("nb_replicas"), "--nb-poi-replicas")
+        poi_args += _get_cli_param(poi_conf.get("poi_config"), "--poi-config")
 
     run_rust_binary(
         ctx,

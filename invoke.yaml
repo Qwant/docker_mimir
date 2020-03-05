@@ -47,6 +47,7 @@ osm: # A file or a url MUST be defined
 #     langs: # languages to import i18n names and labels (codes separated by ,)
 #   ## If present will use osm2mimir to import the poi
 #   osm:
+#     poi_config: # optional path to json file with POI-config and filters
 #     nb_shards:  # control the number of shards of the ES index
 #     nb_replicas:  # control the number of replicas of the ES index
 
