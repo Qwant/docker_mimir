@@ -262,17 +262,12 @@ def load_addresses(ctx, files=[]):
     output_csv = "output.csv.gz"
 
     options = []
-    additional_params = ''
     if ctx.addresses.get("bano", {}).get("file"):
         options.append("--bano")
         options.append(ctx.addresses.bano.file)
     if ctx.addresses.get("oa", {}).get("file"):
         options.append("--openaddresses")
         options.append(ctx.addresses.oa.file)
-        conf = ctx.addresses.oa
-        additional_params = _get_cli_param(conf.get("nb_threads"), "--nb-threads")
-        additional_params += _get_cli_param(conf.get("nb_shards"), "--nb-shards")
-        additional_params += _get_cli_param(conf.get("nb_replicas"), "--nb-replicas")
     if ctx.get("osm", {}).get("file"):
         options.append("--osm")
         options.append(ctx.osm.file)
@@ -287,6 +282,9 @@ def load_addresses(ctx, files=[]):
 
     logging.info("Import addresses into ES instance")
 
+    additional_params = _get_cli_param(ctx.addresses.get("oa", {}).get("nb_threads"), "--nb-threads")
+    additional_params += _get_cli_param(ctx.addresses.get("oa", {}).get("nb_shards"), "--nb-shards")
+    additional_params += _get_cli_param(ctx.addresses.get("oa", {}).get("nb_replicas"), "--nb-replicas")
     run_rust_binary(
         ctx,
         "mimir",
