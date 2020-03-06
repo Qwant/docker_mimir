@@ -16,4 +16,7 @@ RUN pipenv install --system --deploy
 
 COPY invoke.yml tasks.py ./
 
+# To prevent `print()` buffering
+ENV PYTHONUNBUFFERED=1
+
 ENTRYPOINT ["invoke"]
