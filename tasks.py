@@ -274,7 +274,7 @@ def load_addresses(ctx, files=[]):
     if len(options) == 0:
         return
     options.append("--output-compressed-csv")
-    options.append("/data/{}".format(output_csv))
+    options.append("/data/addresses/{}".format(output_csv))
 
     logging.info("Running addresses importer/deduplicator")
 
@@ -290,7 +290,7 @@ def load_addresses(ctx, files=[]):
         "mimir",
         "openaddresses2mimir",
         files,
-        "--input /data/{output_csv} \
+        "--input /data/addresses/{output_csv} \
         --connection-string {ctx.es} \
         {additional_params} \
         --dataset {ctx.dataset}".format(
