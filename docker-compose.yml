@@ -43,6 +43,12 @@ services:
     environment:
       - RUST_LOG=warn,fafnir=info,mimir=info
 
+  addresses-importer:
+    image: qwantresearch/addresses-importer
+    volumes:
+      - ${OSM_DIR:-osm}:/data/osm
+      - ${ADDR_DIR:-addr}:/data/addresses
+
 volumes:
   osm:
   cosmogony:

@@ -51,6 +51,8 @@ osm: # A file or a url MUST be defined
 #     nb_replicas:  # control the number of replicas of the ES index
 
 addresses:
+  use_deduplicator: false
+
   oa:
     file: # Path to .csv, or a directory with multiple .csv (ignored if 'download' is defined)
     download: # List of openaddresses datasets to download
