@@ -19,4 +19,7 @@ ADD invoke.yaml \
     tasks.py \
     ./
 
+# To prevent `print()` buffering
+ENV PYTHONUNBUFFERED=1
+
 ENTRYPOINT [ "invoke" ]

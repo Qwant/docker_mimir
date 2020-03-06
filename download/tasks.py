@@ -84,16 +84,10 @@ def needs_to_download(ctx, filename, max_age=None, md5_url=None):
             return True
 
     if ctx.force_downloads:
-        print(
-            f"'force_downloads' is set to true: existing filename {filename} will be ignored",
-            file=sys.stderr,
-        )
+        print(f"'force_downloads' is set to true: existing filename {filename} will be ignored")
         return True
 
-    print(
-        f"'{filename}' already exists, we don't need to download it again",
-        file=sys.stderr,
-    )
+    print(f"'{filename}' already exists, we don't need to download it again")
     return False
 
 
@@ -142,7 +136,9 @@ def download_oa(ctx, oa_url, oa_filter, output_dir):
     download_file(ctx, src_file, oa_url, max_age=timedelta(days=7))
 
     oa_tmp_dir = path.join(ctx.tmp_dir, "oa")
+    print(f"Unzipping {src_file}...")
     ctx.run(f"unzip -o -qq -d {oa_tmp_dir} {src_file}")
+    print("Done unzipping!")
 
     # Collect the list of files to include in the output.
     keep_patterns = (fnmatch.translate(pat) for pat in oa_filter.split(","))
@@ -158,12 +154,12 @@ def download_oa(ctx, oa_url, oa_filter, output_dir):
                 included_files.append(full_path)
 
     # Flatten all .csv into output directory.
-    print("Collect OpenAddresses data", file=sys.stderr)
+    print("Collect OpenAddresses data")
 
     ctx.run(f"mkdir -p {output_dir}")
     ctx.run(f"rm -rf {output_dir}/*")
 
     for filename in included_files:
         flat_name = path.relpath(filename, oa_tmp_dir).replace("/", "__")
-        print(f" -> add {flat_name}", file=sys.stderr)
+        print(f" -> add {flat_name}")
         ctx.run(f"mv {filename} {output_dir}/{flat_name}")
