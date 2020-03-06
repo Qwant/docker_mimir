@@ -61,6 +61,17 @@ def download(ctx, files=[]):
                 oa_filter=",".join(ctx.addresses.oa.include),
             )
         )
+    if ctx.addresses.get("osm", {}).get("url"):
+        file_name = os.path.basename(ctx.addresses.osm.url)
+        ctx.addresses.osm.file = os.path.join("/data/osm", file_name)
+        ctx.run(
+            "docker-compose {files} run --rm download"
+            " download-osm --osm-url={osm_url} --output-file={output_file}".format(
+                files=files_args,
+                osm_url=ctx.addresses.osm.url,
+                output_file=ctx.addresses.osm.file,
+            )
+        )
 
 
 @task()
@@ -220,8 +231,7 @@ def load_addresses(ctx, files=[]):
         return
 
     if not ctx.addresses.get("use_deduplicator", False):
-        addr_config = ctx.get("addresses")
-        if addr_config.get("bano", {}).get("file"):
+        if ctx.addresses.get("bano", {}).get("file"):
             logging.info("importing bano addresses")
             conf = ctx.addresses.bano
             additional_params = _get_cli_param(conf.get("nb_threads"), "--nb-threads")
@@ -239,7 +249,7 @@ def load_addresses(ctx, files=[]):
                     ctx=ctx, additional_params=additional_params
                 ),
             )
-        if addr_config.get("oa", {}).get("path"):
+        if ctx.addresses.get("oa", {}).get("path"):
             logging.info("importing oa addresses")
             conf = ctx.addresses.oa
             additional_params = _get_cli_param(conf.get("nb_threads"), "--nb-threads")
@@ -265,12 +275,12 @@ def load_addresses(ctx, files=[]):
     if ctx.addresses.get("bano", {}).get("file"):
         options.append("--bano")
         options.append(ctx.addresses.bano.file)
-    if ctx.addresses.get("oa", {}).get("file"):
+    if ctx.addresses.get("oa", {}).get("path"):
         options.append("--openaddresses")
-        options.append(ctx.addresses.oa.file)
-    if ctx.get("osm", {}).get("file"):
+        options.append(ctx.addresses.oa.path)
+    if ctx.addresses.get("osm", {}).get("file"):
         options.append("--osm")
-        options.append(ctx.osm.file)
+        options.append(ctx.addresses.osm.file)
     if len(options) == 0:
         return
     options.append("--output-compressed-csv")

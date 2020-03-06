@@ -16,6 +16,9 @@ street:
 addresses:
   use_deduplicator: false
 
+  osm:
+    url: # https://download.geofabrik.de/europe/luxembourg-latest.osm.pbf
+
   oa:
     # URL for the zip archive containing all data.
     url: https://data.openaddresses.io/openaddr-collected-europe.zip
