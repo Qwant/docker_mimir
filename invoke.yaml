@@ -54,20 +54,27 @@ addresses:
   use_deduplicator: false
 
   oa:
-    file: # Path to .csv, or a directory with multiple .csv (ignored if 'download' is defined)
-    download: # List of openaddresses datasets to download
-      # - lu/countrywide
-      # - fr/paris
+    path: # Path to .csv, or a directory with multiple .csv (ignored if 'url' is defined)
+    url: # Url where to download OpenAddresses data
+    include: # List of file patterns to include from path
+      - lu/**.csv
+      # - fr/**.csv
     nb_threads: # number of threads to use
 #   nb_shards:  # control the number of shards of the ES index
 #   nb_replicas:  # control the number of replicas of the ES index
 
   bano:
-    file: # PATH to the bano file, ignored if url is defined
-    url: #https://bano.openstreetmap.fr/data/full.csv.gz
+    file: # Path to the bano file, ignored if url is defined
+    url: # https://bano.openstreetmap.fr/data/full.csv.gz
     nb_threads: # number of threads to use
 #   nb_shards:  # control the number of shards of the ES index
 #   nb_replicas:  # control the number of replicas of the ES index
+
+  # Specify an OSM file to import addresses from.
+  # NOTE: this section will be ignored if `use_deduplicator` is set to false.
+  osm:
+    file: # Path to the .pbf file (ignored if 'url' is defined)
+    url: # https://download.geofabrik.de/europe/luxembourg-latest.osm.pbf
 
 # street:
 #   nb_shards:  # control the number of shards of the ES index
