@@ -20,3 +20,4 @@ categories:
 additional_pytest_args:
   - "--check-duplicates=10"
   - "-n 12"
+  - "--https-no-verify"

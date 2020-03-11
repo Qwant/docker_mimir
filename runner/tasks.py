@@ -167,15 +167,20 @@ REPORT_COLUMN = ["region", "category", "failed", "total", "ratio", "duration"]
 
 def _get_version(url):
     """
-    uggly hack to get the version of mimir used
+    ugly hack to get the version of mimir used
     if works only for mimir (but addock does not expose a /status endpoint)
     """
     if "/autocomplete" not in url:
         return None
 
     status_url = url.replace("/autocomplete", "/status")
-    status_resp = requests.get(status_url)
-    return status_resp.json().get("version")
+    status_resp = requests.get(status_url, verify=False)
+    try:
+        status_resp.raise_for_status()
+        return status_resp.json().get("version")
+    except Exception as e:
+        logging.warning('Failed to fetch geocoder version', exc_info=True)
+        return None
 
 
 @task(default=True)
