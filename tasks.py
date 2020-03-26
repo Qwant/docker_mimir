@@ -270,7 +270,13 @@ def load_addresses(ctx, files=[]):
             )
         return
 
+    # -- Use deduplication
+
     output_csv = "output.csv.gz"
+
+    if ctx.addresses.get("skip_deduplication") and os.path.isfile(output_csv):
+        logging.info("`%s` already exists: skipping deduplication", output_csv)
+        return
 
     options = []
     if ctx.addresses.get("bano", {}).get("file"):

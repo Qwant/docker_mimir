@@ -15,6 +15,7 @@ street:
 
 addresses:
   use_deduplicator: false
+  skip_deduplication: true
 
   osm:
     url: # https://download.geofabrik.de/europe/luxembourg-latest.osm.pbf
