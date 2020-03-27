@@ -27,6 +27,18 @@ def run_rust_binary(ctx, container, bin, files, params):
     )
 
 
+def file_exists(ctx, files, path):
+    """
+    Check if a file exist, this check will be done from inside of the download
+    image, thus all docker volumes will be mounted.
+    """
+    files_args = _build_docker_files_args(files)
+    return ctx.run(
+        "docker-compose {files} run --rm download file-exists --path={path}".format(files=files_args, path=path),
+        hide='out',
+    ).stdout.strip() == "1"
+
+
 @task()
 def download(ctx, files=[]):
     files_args = _build_docker_files_args(files)
@@ -272,9 +284,9 @@ def load_addresses(ctx, files=[]):
 
     # -- Use deduplication
 
-    output_csv = "output.csv.gz"
+    output_csv = "/data/addresses/output.csv.gz"
 
-    if ctx.addresses.get("skip_deduplication") and os.path.isfile(output_csv):
+    if ctx.addresses.get("skip_deduplication") and file_exists(ctx, files, output_csv):
         logging.info("`%s` already exists: skipping deduplication", output_csv)
         return
 
@@ -291,7 +303,7 @@ def load_addresses(ctx, files=[]):
     if len(options) == 0:
         return
     options.append("--output-compressed-csv")
-    options.append("/data/addresses/{}".format(output_csv))
+    options.append(output_csv)
 
     logging.info("Running addresses importer/deduplicator")
 
@@ -307,7 +319,7 @@ def load_addresses(ctx, files=[]):
         "mimir",
         "openaddresses2mimir",
         files,
-        "--input /data/addresses/{output_csv} \
+        "--input {output_csv} \
         --connection-string {ctx.es} \
         {additional_params} \
         --dataset {ctx.dataset}".format(
