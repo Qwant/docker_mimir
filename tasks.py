@@ -36,7 +36,8 @@ def file_exists(ctx, files, path):
     return ctx.run(
         "docker-compose {files} run --rm download file-exists --path={path}".format(files=files_args, path=path),
         hide='out',
-    ).stdout.strip() == "1"
+        warn=True,
+    ).exited == 0
 
 
 @task()
@@ -294,27 +295,27 @@ def load_addresses(ctx, files=[]):
 
     output_csv = "/data/addresses/output.csv.gz"
 
-    options = []
-    if ctx.addresses.get("bano", {}).get("file"):
-        options.append("--bano")
-        options.append(ctx.addresses.bano.file)
-    if ctx.addresses.get("oa", {}).get("path"):
-        options.append("--openaddresses")
-        options.append(ctx.addresses.oa.path)
-    if ctx.addresses.get("osm", {}).get("file"):
-        options.append("--osm")
-        options.append(ctx.addresses.osm.file)
-    if len(options) == 0:
-        return
-    options.append("--output-compressed-csv")
-    options.append(output_csv)
-
     if ctx.addresses.get("skip_deduplication") and file_exists(ctx, files, output_csv):
         logging.info("`%s` already exists: skipping deduplication", output_csv)
         return
     else:
         download_addresses(ctx, files)
         logging.info("Running addresses importer/deduplicator")
+        options = []
+        if ctx.addresses.get("bano", {}).get("file"):
+            options.append("--bano")
+            options.append(ctx.addresses.bano.file)
+        if ctx.addresses.get("oa", {}).get("path"):
+            options.append("--openaddresses")
+            options.append(ctx.addresses.oa.path)
+        if ctx.addresses.get("osm", {}).get("file"):
+            options.append("--osm")
+            options.append(ctx.addresses.osm.file)
+        if len(options) == 0:
+            logging.info("No dataset to import: aborting addresses deduplication")
+            return
+        options.append("--output-compressed-csv")
+        options.append(output_csv)
         run_rust_binary(ctx, "addresses-importer", "", files, ' '.join(options))
 
     logging.info("Import addresses into ES instance")

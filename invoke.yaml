@@ -53,8 +53,6 @@ osm: # A file or a url MUST be defined
 
 addresses:
   # Use the deduplication to merge addresses from different sources.
-  #
-  # NOTE: If this is false, only addresses from OpenAddresses may be imported.
   use_deduplicator: false
 
   # If set to true, the deduplication step will be performed only to build the

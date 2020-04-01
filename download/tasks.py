@@ -1,11 +1,12 @@
 import fnmatch
 import hashlib
+import invoke
 import json
 import os
 import re
+import requests
 import sys
 import tempfile
-import requests
 from datetime import datetime, timedelta
 from os import path, walk
 
@@ -122,7 +123,8 @@ def file_exists(ctx, path):
     """
     Print '1' if the provided path exists and is a file, overwise, print '0'.
     """
-    print(int(os.path.isfile(path)))
+    if not os.path.isfile(path):
+        raise invoke.Exit(code=1)
 
 
 @task
