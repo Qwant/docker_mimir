@@ -121,7 +121,8 @@ def download_file(ctx, filename, url, max_age=None, md5_url=None):
 @task
 def file_exists(ctx, path):
     """
-    Print '1' if the provided path exists and is a file, overwise, print '0'.
+    Exit with code 0 if a the provided path exists and is a file, overwise exit
+    with code 1.
     """
     if not os.path.isfile(path):
         raise invoke.Exit(code=1)
