@@ -15,15 +15,16 @@ street:
 
 addresses:
   use_deduplicator: false
+  skip_deduplication: true
 
   osm:
-    url: # https://download.geofabrik.de/europe/luxembourg-latest.osm.pbf
+    url: # https://download.geofabrik.de/europe/luxembourg-latest.osm.pbf
 
   oa:
-    # URL for the zip archive containing all data.
+    # URL for the zip archive containing all data.
     url: https://data.openaddresses.io/openaddr-collected-europe.zip
 
-    # Patterns of file to import URLs from.
+    # Patterns of file to import URLs from.
     include:
       - lu/**.csv
       # - at/**.csv

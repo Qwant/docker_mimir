@@ -1,10 +1,12 @@
 import fnmatch
 import hashlib
+import invoke
 import json
+import os
 import re
+import requests
 import sys
 import tempfile
-import requests
 from datetime import datetime, timedelta
 from os import path, walk
 
@@ -95,7 +97,7 @@ def download_file(ctx, filename, url, max_age=None, md5_url=None):
     if not needs_to_download(ctx, filename, max_age, md5_url):
         return
 
-    #  Forget current informations about file in case the download fails.
+    # Forget current informations about file in case the download fails.
     save_file_status(ctx, filename, None)
 
     ctx.run(f"mkdir -p {path.dirname(filename)}/")
@@ -114,6 +116,16 @@ def download_file(ctx, filename, url, max_age=None, md5_url=None):
             raise Exception(f"md5 at {md5_url} didn't match for {url}")
 
     save_file_status(ctx, filename, {"last_update": datetime.utcnow(), "md5": md5})
+
+
+@task
+def file_exists(ctx, path):
+    """
+    Exit with code 0 if a the provided path exists and is a file, overwise exit
+    with code 1.
+    """
+    if not os.path.isfile(path):
+        raise invoke.Exit(code=1)
 
 
 @task
