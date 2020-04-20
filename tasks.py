@@ -314,6 +314,8 @@ def load_addresses(ctx, files=[]):
         if len(options) == 0:
             logging.info("No dataset to import: aborting addresses deduplication")
             return
+        options.append("--refresh-delay")
+        options.append("60000")
         options.append("--output-compressed-csv")
         options.append(output_csv)
         run_rust_binary(ctx, "addresses-importer", "", files, ' '.join(options))
