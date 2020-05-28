@@ -313,9 +313,9 @@ def load_addresses(ctx, files=[]):
 
         if ctx.addresses.deduplication.skip and file_exists(ctx, files, output_csv):
             logging.info("`%s` already exists: skipping deduplication", output_csv)
-            return
+        else:
+            dedupe_addresses(ctx, files)
 
-        dedupe_addresses(ctx, files)
         load_oa_addresses(ctx, output_csv, files)
     else:
         download_addresses(ctx, files)
