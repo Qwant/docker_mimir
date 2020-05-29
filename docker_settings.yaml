@@ -16,7 +16,6 @@ street:
 addresses:
   deduplication:
     enable: false
-    skip: true
     output: /data/addresses/output.csv.gz
 
   osm:

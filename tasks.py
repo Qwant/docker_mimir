@@ -274,12 +274,11 @@ def dedupe_addresses(ctx, files=[]):
     run_rust_binary(ctx, "addresses-importer", "", files, " ".join(options))
 
 
-def load_addresses_base_params(ctx):
-    conf = ctx.addresses.bano
+def load_addresses_base_params(ctx, addr_conf):
     return [
-        _get_cli_param(conf.get("nb_threads"), "--nb-threads"),
-        _get_cli_param(conf.get("nb_shards"), "--nb-shards"),
-        _get_cli_param(conf.get("nb_replicas"), "--nb-replicas"),
+        _get_cli_param(addr_conf.get("nb_threads"), "--nb-threads"),
+        _get_cli_param(addr_conf.get("nb_shards"), "--nb-shards"),
+        _get_cli_param(addr_conf.get("nb_replicas"), "--nb-replicas"),
         _get_cli_param(ctx.es, "--connection-string"),
         _get_cli_param(ctx.dataset, "--dataset"),
     ]
@@ -289,7 +288,7 @@ def load_addresses_base_params(ctx):
 def load_bano_adresses(ctx, input_file, files=[]):
     """Populate ES with addresses from a BANO file"""
     logging.info("importing bano addresses from %s", input_file)
-    params = load_addresses_base_params(ctx) + [_get_cli_param(input_file, "--input")]
+    params = load_addresses_base_params(ctx, ctx.addresses.bano) + [_get_cli_param(input_file, "--input")]
     run_rust_binary(ctx, "mimir", "bano2mimir", files, " ".join(params))
 
 
@@ -297,13 +296,20 @@ def load_bano_adresses(ctx, input_file, files=[]):
 def load_oa_addresses(ctx, input_path, files=[]):
     """Populate ES with addresses from an OpenAddresses file"""
     logging.info("importing oa addresses from %s", input_path)
-    params = load_addresses_base_params(ctx) + [_get_cli_param(input_path, "--input")]
+    params = load_addresses_base_params(ctx, ctx.addresses.oa) + [_get_cli_param(input_path, "--input")]
     run_rust_binary(ctx, "mimir", "openaddresses2mimir", files, " ".join(params))
 
 
 @task()
-def load_addresses(ctx, files=[]):
-    """Fetch addresses and populate the database"""
+def load_addresses(ctx, skip_deduplication=True, files=[]):
+    """
+    Fetch addresses and populate the database.
+
+    By default, the deduplication step will be performed only to build the
+    initial base of addresses. If the `output` file already exists, no
+    computation will be performed. If you wish to disable this behavior, use
+    `--no-skip-deduplication`.
+    """
     if not _is_config_object(ctx.get("addresses")):
         logging.info("no addresses to import")
         return
@@ -311,7 +317,7 @@ def load_addresses(ctx, files=[]):
     if ctx.addresses.deduplication.enable:
         output_csv = ctx.addresses.deduplication.output
 
-        if ctx.addresses.deduplication.skip and file_exists(ctx, files, output_csv):
+        if skip_deduplication and file_exists(ctx, files, output_csv):
             logging.info("`%s` already exists: skipping deduplication", output_csv)
         else:
             dedupe_addresses(ctx, files)
@@ -404,7 +410,7 @@ def load_pois(ctx, files):
 
 
 @task(default=True)
-def load_all(ctx, files=[]):
+def load_all(ctx, skip_deduplication=True, files=[]):
     """
     default task called if `invoke` is run without args
     This is the main tasks that import all the datas into mimir
@@ -413,7 +419,7 @@ def load_all(ctx, files=[]):
 
     load_admins(ctx, files)
 
-    load_addresses(ctx, files)
+    load_addresses(ctx, skip_deduplication, files)
 
     load_osm_streets(ctx, files)
 
