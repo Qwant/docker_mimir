@@ -245,100 +245,92 @@ def load_osm_streets(ctx, files=[]):
 
 
 @task()
-def load_addresses(ctx, files=[]):
+def dedupe_addresses(ctx, files=[]):
+    """Fetch and deduplicate addresses"""
+    download_addresses(ctx, files)
+
+    output_csv = ctx.addresses.deduplication.output
+    logging.info("Running addresses importer/deduplicator")
+    options = []
+
+    if ctx.addresses.get("bano", {}).get("file"):
+        options.append("--bano")
+        options.append(ctx.addresses.bano.file)
+    if ctx.addresses.get("oa", {}).get("path"):
+        options.append("--openaddresses")
+        options.append(ctx.addresses.oa.path)
+    if ctx.addresses.get("osm", {}).get("file"):
+        options.append("--osm")
+        options.append(ctx.addresses.osm.file)
+
+    if len(options) == 0:
+        logging.info("No dataset to import: aborting addresses deduplication")
+        return
+
+    options.append("--refresh-delay")
+    options.append("60000")
+    options.append("--output-compressed-csv")
+    options.append(output_csv)
+    run_rust_binary(ctx, "addresses-importer", "", files, " ".join(options))
+
+
+def load_addresses_base_params(ctx, addr_conf):
+    return [
+        _get_cli_param(addr_conf.get("nb_threads"), "--nb-threads"),
+        _get_cli_param(addr_conf.get("nb_shards"), "--nb-shards"),
+        _get_cli_param(addr_conf.get("nb_replicas"), "--nb-replicas"),
+        _get_cli_param(ctx.es, "--connection-string"),
+        _get_cli_param(ctx.dataset, "--dataset"),
+    ]
+
+
+@task()
+def load_bano_adresses(ctx, input_file, files=[]):
+    """Populate ES with addresses from a BANO file"""
+    logging.info("importing bano addresses from %s", input_file)
+    params = load_addresses_base_params(ctx, ctx.addresses.bano) + [_get_cli_param(input_file, "--input")]
+    run_rust_binary(ctx, "mimir", "bano2mimir", files, " ".join(params))
+
+
+@task()
+def load_oa_addresses(ctx, input_path, files=[]):
+    """Populate ES with addresses from an OpenAddresses file"""
+    logging.info("importing oa addresses from %s", input_path)
+    params = load_addresses_base_params(ctx, ctx.addresses.oa) + [_get_cli_param(input_path, "--input")]
+    run_rust_binary(ctx, "mimir", "openaddresses2mimir", files, " ".join(params))
+
+
+@task()
+def load_addresses(ctx, skip_deduplication=True, files=[]):
+    """
+    Fetch addresses and populate the database.
+
+    By default, the deduplication step will be performed only to build the
+    initial base of addresses. If the `output` file already exists, no
+    computation will be performed. If you wish to disable this behavior, use
+    `--no-skip-deduplication`.
+    """
     if not _is_config_object(ctx.get("addresses")):
         logging.info("no addresses to import")
         return
 
-    if not ctx.addresses.get("use_deduplicator", False):
-        download_addresses(ctx, files)
+    if ctx.addresses.deduplication.enable:
+        output_csv = ctx.addresses.deduplication.output
 
-        if ctx.addresses.get("bano", {}).get("file"):
-            logging.info("importing bano addresses")
-            conf = ctx.addresses.bano
-            additional_params = _get_cli_param(conf.get("nb_threads"), "--nb-threads")
-            additional_params += _get_cli_param(conf.get("nb_shards"), "--nb-shards")
-            additional_params += _get_cli_param(conf.get("nb_replicas"), "--nb-replicas")
-            run_rust_binary(
-                ctx,
-                "mimir",
-                "bano2mimir",
-                files,
-                "--input {ctx.addresses.bano.file} \
-                --connection-string {ctx.es} \
-                {additional_params} \
-                --dataset {ctx.dataset}".format(
-                    ctx=ctx, additional_params=additional_params
-                ),
-            )
-        if ctx.addresses.get("oa", {}).get("path"):
-            logging.info("importing oa addresses")
-            conf = ctx.addresses.oa
-            additional_params = _get_cli_param(conf.get("nb_threads"), "--nb-threads")
-            additional_params += _get_cli_param(conf.get("nb_shards"), "--nb-shards")
-            additional_params += _get_cli_param(conf.get("nb_replicas"), "--nb-replicas")
-            run_rust_binary(
-                ctx,
-                "mimir",
-                "openaddresses2mimir",
-                files,
-                "--input {ctx.addresses.oa.path} \
-                --connection-string {ctx.es} \
-                {additional_params} \
-                --dataset {ctx.dataset}".format(
-                    ctx=ctx, additional_params=additional_params
-                ),
-            )
-        return
+        if skip_deduplication and file_exists(ctx, files, output_csv):
+            logging.info("`%s` already exists: skipping deduplication", output_csv)
+        else:
+            dedupe_addresses(ctx, files)
 
-    # -- Use deduplication
-
-    output_csv = "/data/addresses/output.csv.gz"
-
-    if ctx.addresses.get("skip_deduplication") and file_exists(ctx, files, output_csv):
-        logging.info("`%s` already exists: skipping deduplication", output_csv)
-        return
+        load_oa_addresses(ctx, output_csv, files)
     else:
         download_addresses(ctx, files)
-        logging.info("Running addresses importer/deduplicator")
-        options = []
+
         if ctx.addresses.get("bano", {}).get("file"):
-            options.append("--bano")
-            options.append(ctx.addresses.bano.file)
+            load_bano_adresses(ctx, ctx.addresses.bano.file, files)
+
         if ctx.addresses.get("oa", {}).get("path"):
-            options.append("--openaddresses")
-            options.append(ctx.addresses.oa.path)
-        if ctx.addresses.get("osm", {}).get("file"):
-            options.append("--osm")
-            options.append(ctx.addresses.osm.file)
-        if len(options) == 0:
-            logging.info("No dataset to import: aborting addresses deduplication")
-            return
-        options.append("--refresh-delay")
-        options.append("60000")
-        options.append("--output-compressed-csv")
-        options.append(output_csv)
-        run_rust_binary(ctx, "addresses-importer", "", files, ' '.join(options))
-
-    logging.info("Import addresses into ES instance")
-
-    additional_params = _get_cli_param(ctx.addresses.get("oa", {}).get("nb_threads"), "--nb-threads")
-    additional_params += _get_cli_param(ctx.addresses.get("oa", {}).get("nb_shards"), "--nb-shards")
-    additional_params += _get_cli_param(ctx.addresses.get("oa", {}).get("nb_replicas"), "--nb-replicas")
-    run_rust_binary(
-        ctx,
-        "mimir",
-        "openaddresses2mimir",
-        files,
-        "--input {output_csv} \
-        --connection-string {ctx.es} \
-        {additional_params} \
-        --dataset {ctx.dataset}".format(
-            output_csv=output_csv,
-            ctx=ctx,
-            additional_params=additional_params
-        ),
-    )
+            load_oa_addresses(ctx, ctx.addresses.oa.path, files)
 
 
 @task()
@@ -418,7 +410,7 @@ def load_pois(ctx, files):
 
 
 @task(default=True)
-def load_all(ctx, files=[]):
+def load_all(ctx, skip_deduplication=True, files=[]):
     """
     default task called if `invoke` is run without args
     This is the main tasks that import all the datas into mimir
@@ -427,7 +419,7 @@ def load_all(ctx, files=[]):
 
     load_admins(ctx, files)
 
-    load_addresses(ctx, files)
+    load_addresses(ctx, skip_deduplication, files)
 
     load_osm_streets(ctx, files)
 

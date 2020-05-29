@@ -14,8 +14,9 @@ street:
   osm_db_file: /data/osm/osm_db.tmp
 
 addresses:
-  use_deduplicator: false
-  skip_deduplication: true
+  deduplication:
+    enable: false
+    output: /data/addresses/output.csv.gz
 
   osm:
     url: # https://download.geofabrik.de/europe/luxembourg-latest.osm.pbf
