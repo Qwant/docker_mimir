@@ -81,7 +81,7 @@ def download_addresses(ctx, files=[]):
         for dataset in ctx.addresses.oa.datasets:
             params = [
                 _get_cli_param(ctx.addresses.oa.path, "--output-dir"),
-                _get_cli_param(dataset['filename'], "--filename"),
+                _get_cli_param(dataset['filename'], "--src-filename"),
                 _get_cli_param(dataset['url'], "--oa-url"),
                 _get_cli_param(",".join(dataset['include']), "--oa-filter"),
             ]

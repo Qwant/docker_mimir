@@ -148,8 +148,8 @@ def download_bano(ctx, bano_url, output_file):
 
 
 @task
-def download_oa(ctx, filename, oa_url, oa_filter, output_dir):
-    src_file = path.join(ctx.cache_dir, filename)
+def download_oa(ctx, src_filename, oa_url, oa_filter, output_dir):
+    src_file = path.join(ctx.cache_dir, src_filename)
     download_file(ctx, src_file, oa_url, max_age=timedelta(days=7))
 
     oa_tmp_dir = path.join(ctx.tmp_dir, "oa")
@@ -175,6 +175,6 @@ def download_oa(ctx, filename, oa_url, oa_filter, output_dir):
     ctx.run(f"mkdir -p {output_dir}")
 
     for piece in included_files:
-        flat_name = path.relpath(path.join(filename, piece), oa_tmp_dir).replace("/", "__")
+        flat_name = path.join(src_filename, path.relpath(piece, oa_tmp_dir)).replace("/", "__")
         print(f" -> add {flat_name}")
         ctx.run(f"mv {piece} {output_dir}/{flat_name}")
