@@ -22,28 +22,27 @@ addresses:
     url: # https://download.geofabrik.de/europe/luxembourg-latest.osm.pbf
 
   oa:
-    # URL for the zip archive containing all data.
-    url: https://data.openaddresses.io/openaddr-collected-europe.zip
-
-    # Patterns of file to import URLs from.
-    include:
-      - lu/**.csv
-      # - at/**.csv
-      # - be/**.csv
-      # - de/**.csv
-      # - dk/**.csv
-      # - ee/**.csv
-      # - es/**.csv
-      # - fi/**.csv
-      # - fr/**.csv
-      # - gr/**.csv
-      # - it/**.csv
-      # - lt/**.csv
-      # - nl/**.csv
-      # - pl/**.csv
-      # - pt/**.csv
-      # - se/**.csv
-      # - si/**.csv
-      # - sk/**.csv
+    datasets:
+      - filename: oa_europe.zip
+        url: https://data.openaddresses.io/openaddr-collected-europe.zip
+        include:
+          - lu/**.csv
+          # - at/**.csv
+          # - be/**.csv
+          # - de/**.csv
+          # - dk/**.csv
+          # - ee/**.csv
+          # - es/**.csv
+          # - fi/**.csv
+          # - fr/**.csv
+          # - gr/**.csv
+          # - it/**.csv
+          # - lt/**.csv
+          # - nl/**.csv
+          # - pl/**.csv
+          # - pt/**.csv
+          # - se/**.csv
+          # - si/**.csv
+          # - sk/**.csv
 
 geocoder_tester_region: luxembourg

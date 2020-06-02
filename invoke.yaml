@@ -60,14 +60,16 @@ addresses:
     output: /data/addresses/output.csv.gz
 
   oa:
-    path: # Path to .csv, or a directory with multiple .csv (ignored if 'url' is defined)
-    url: # Url where to download OpenAddresses data
-    include: # List of file patterns to include from path
-      - lu/**.csv
-      # - fr/**.csv
-    nb_threads: # number of threads to use
-#   nb_shards:  # control the number of shards of the ES index
-#   nb_replicas:  # control the number of replicas of the ES index
+    path:  # change path where to extract dataset
+    nb_threads:  # number of threads to use
+    nb_shards:  # control the number of shards of the ES index
+    nb_replicas:  # control the number of replicas of the ES index
+
+    datasets:
+      - filename:  # unique filename to download to
+        url:  # URL for the zip archive containing all data
+        include:  # list of file patterns to include from path
+          - lu/**.csv
 
   bano:
     file: # Path to the bano file, ignored if url is defined

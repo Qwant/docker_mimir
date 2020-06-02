@@ -69,17 +69,26 @@ def download_addresses(ctx, files=[]):
                 output_file=ctx.addresses.bano.file,
             )
         )
-    if ctx.addresses.get("oa", {}).get("url") and ctx.addresses.get("oa", {}).get("include"):
-        ctx.addresses.oa.path = "/data/addresses/oa"
-        ctx.run(
-            "docker-compose {files} run --rm download"
-            " download-oa --oa-url={oa_url} --output-dir={output_dir} --oa-filter={oa_filter}".format(
-                files=files_args,
-                oa_url=ctx.addresses.oa.url,
-                output_dir=ctx.addresses.oa.path,
-                oa_filter=",".join(ctx.addresses.oa.include),
-            )
+
+    if ctx.addresses.get("oa", {}).get("datasets"):
+        if not ctx.addresses.oa.path:
+            ctx.addresses.oa.path = "/data/addresses/oa"
+
+        ctx.run("docker-compose {} run --rm download remove-directory {}".format(
+            files_args, ctx.addresses.oa.path)
         )
+
+        for dataset in ctx.addresses.oa.datasets:
+            params = [
+                _get_cli_param(ctx.addresses.oa.path, "--output-dir"),
+                _get_cli_param(dataset['filename'], "--filename"),
+                _get_cli_param(dataset['url'], "--oa-url"),
+                _get_cli_param(",".join(dataset['include']), "--oa-filter"),
+            ]
+            ctx.run(
+                "docker-compose {} run --rm download download-oa {}".format(files_args, " ".join(params))
+            )
+
     if ctx.addresses.get("osm", {}).get("url"):
         file_name = os.path.basename(ctx.addresses.osm.url)
         ctx.addresses.osm.file = os.path.join("/data/osm", file_name)
