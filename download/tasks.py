@@ -129,6 +129,11 @@ def file_exists(ctx, path):
 
 
 @task
+def remove_directory(ctx, path):
+    ctx.run(f"rm -rf {path}")
+
+
+@task
 def download_osm(ctx, osm_url, output_file):
     download_file(
         ctx, output_file, osm_url, md5_url=osm_url + ".md5",
@@ -143,8 +148,8 @@ def download_bano(ctx, bano_url, output_file):
 
 
 @task
-def download_oa(ctx, oa_url, oa_filter, output_dir):
-    src_file = path.join(ctx.cache_dir, "oa.zip")
+def download_oa(ctx, src_filename, oa_url, oa_filter, output_dir):
+    src_file = path.join(ctx.cache_dir, src_filename)
     download_file(ctx, src_file, oa_url, max_age=timedelta(days=7))
 
     oa_tmp_dir = path.join(ctx.tmp_dir, "oa")
@@ -167,11 +172,9 @@ def download_oa(ctx, oa_url, oa_filter, output_dir):
 
     # Flatten all .csv into output directory.
     print("Collect OpenAddresses data")
-
     ctx.run(f"mkdir -p {output_dir}")
-    ctx.run(f"rm -rf {output_dir}/*")
 
-    for filename in included_files:
-        flat_name = path.relpath(filename, oa_tmp_dir).replace("/", "__")
+    for piece in included_files:
+        flat_name = path.join(src_filename, path.relpath(piece, oa_tmp_dir)).replace("/", "__")
         print(f" -> add {flat_name}")
-        ctx.run(f"mv {filename} {output_dir}/{flat_name}")
+        ctx.run(f"mv {piece} {output_dir}/{flat_name}")
