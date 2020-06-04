@@ -66,10 +66,10 @@ addresses:
     nb_replicas:  # control the number of replicas of the ES index
 
     datasets:
-      - filename:  # unique filename to download to
-        url:  # URL for the zip archive containing all data
-        include:  # list of file patterns to include from path
-          - lu/**.csv
+      # - filename:  # unique filename to download to
+      #   url:  # URL for the zip archive containing all data
+      #   include:  # list of file patterns to include from path
+      #     - lu/**.csv
 
   bano:
     file: # Path to the bano file, ignored if url is defined
