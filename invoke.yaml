@@ -64,6 +64,7 @@ addresses:
     nb_threads:  # number of threads to use
     nb_shards:  # control the number of shards of the ES index
     nb_replicas:  # control the number of replicas of the ES index
+#   nb_insert_threads:  # number of threads used to insert in ES database
 
     datasets:
       # - filename:  # unique filename to download to
@@ -77,6 +78,7 @@ addresses:
     nb_threads: # number of threads to use
 #   nb_shards:  # control the number of shards of the ES index
 #   nb_replicas:  # control the number of replicas of the ES index
+#   nb_insert_threads:  # number of threads used to insert in ES database
 
   # Specify an OSM file to import addresses from.
   # NOTE: this section will be ignored if `use_deduplicator` is set to false.
