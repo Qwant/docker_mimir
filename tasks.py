@@ -288,6 +288,7 @@ def load_addresses_base_params(ctx, addr_conf):
         _get_cli_param(addr_conf.get("nb_threads"), "--nb-threads"),
         _get_cli_param(addr_conf.get("nb_shards"), "--nb-shards"),
         _get_cli_param(addr_conf.get("nb_replicas"), "--nb-replicas"),
+        _get_cli_param(addr_conf.get("nb_insert_threads"), "--nb-insert-threads"),
         _get_cli_param(ctx.es, "--connection-string"),
         _get_cli_param(ctx.dataset, "--dataset"),
     ]
