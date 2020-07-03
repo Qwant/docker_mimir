@@ -56,6 +56,9 @@ addresses:
     # Use the deduplication to merge addresses from different sources.
     enable: false
 
+    # Number of threads used for computations.
+    # nb_threads:
+
     # Path to output deduplicated addresses to.
     output: /data/addresses/output.csv.gz
 
