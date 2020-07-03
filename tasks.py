@@ -260,26 +260,20 @@ def dedupe_addresses(ctx, files=[]):
 
     output_csv = ctx.addresses.deduplication.output
     logging.info("Running addresses importer/deduplicator")
-    options = []
 
-    if ctx.addresses.get("bano", {}).get("file"):
-        options.append("--bano")
-        options.append(ctx.addresses.bano.file)
-    if ctx.addresses.get("oa", {}).get("path"):
-        options.append("--openaddresses")
-        options.append(ctx.addresses.oa.path)
-    if ctx.addresses.get("osm", {}).get("file"):
-        options.append("--osm")
-        options.append(ctx.addresses.osm.file)
+    options = [
+        "--refresh-delay=60000",
+        "--output-compressed-csv=" + output_csv,
+        _get_cli_param(ctx.addresses.get("bano", {}).get("file"), "--bano"),
+        _get_cli_param(ctx.addresses.get("oa", {}).get("path"), "--openaddresses"),
+        _get_cli_param(ctx.addresses.get("osm", {}).get("file"), "--osm"),
+        _get_cli_param(ctx.addresses.deduplication.get("nb_threads"), "--num-threads"),
+    ]
 
     if len(options) == 0:
         logging.info("No dataset to import: aborting addresses deduplication")
         return
 
-    options.append("--refresh-delay")
-    options.append("60000")
-    options.append("--output-compressed-csv")
-    options.append(output_csv)
     run_rust_binary(ctx, "addresses-importer", "", files, " ".join(options))
 
 
