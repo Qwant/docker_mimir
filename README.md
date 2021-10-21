@@ -1,6 +1,13 @@
 [![Python 3.5](https://img.shields.io/badge/python-3.5-blue.svg)](https://www.python.org/downloads/release/python-350/)
 ![pipenv](https://img.shields.io/badge/pipenv->%3D%209.0.1-brightgreen.svg)
 
+⚠ This repository is no longer maintained
+===
+
+This repository was previously maintained together with a mirror containing our
+deployment workflows. Keeping this repository independent from our
+configurations turned out to be a lot of efforts for only few benefits.
+
 # docker_mimir: Default [Mimir](https://github.com/CanalTP/mimirsbrunn) Import Tool
 
 - This tool is the easiest way to import data for the [Mimir](https://github.com/CanalTP/mimirsbrunn) geocoding system.
